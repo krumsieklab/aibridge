@@ -1,0 +1,4 @@
+.idea
+aibridge/__pycache__
+aibridge.egg-info
+jandocs

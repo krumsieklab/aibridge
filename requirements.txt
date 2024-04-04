@@ -1,0 +1,5 @@
+requests~=2.31.0
+transformers~=4.39.3
+openai~=1.16.1
+anthropic~=0.21.3
+setuptools~=69.1.1
