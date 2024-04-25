@@ -2,3 +2,4 @@
 aibridge/__pycache__
 aibridge.egg-info
 jandocs
+.DS_Store
