@@ -76,7 +76,7 @@ class AnthropicClient(LLM):
 
             except anthropic.RateLimitError as e:
                 if self.verbose:
-                    print(f"Claude rate limit reached. Waiting a full minute to reset.")
+                    print(f"Claude rate limit reached. Waiting a full minute to reset. (Full error: {e})")
                 # Reset the call timestamps here
                 self.call_timestamps.clear()
                 # wait
