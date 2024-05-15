@@ -10,17 +10,17 @@ class LLMLogger(LLM):
     Wraps an existing LLM object and logs every single prompt/completion pair into a directory.
     """
 
-    def __init__(self, llm: LLM, log_dir: str):
+    def __init__(self, llm: LLM, log_dir: str, delete_existing_dir: bool = False):
         """
         Initialize the LLMSimpleLogger with an existing LLM object and a directory to log prompts and completions.
-        Deletes the directory first if it already exists.
+        By default, the directory is not deleted if it already exists.
         """
 
         # store parameters
         self.llm = llm
         self.log_dir = log_dir
         # delete directory if it already exists
-        if os.path.exists(log_dir):
+        if delete_existing_dir and os.path.exists(log_dir):
             shutil.rmtree(log_dir)
         # create directory
         os.makedirs(log_dir)
