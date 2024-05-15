@@ -22,8 +22,8 @@ class LLMLogger(LLM):
         # delete directory if it already exists
         if delete_existing_dir and os.path.exists(log_dir):
             shutil.rmtree(log_dir)
-        # create directory
-        os.makedirs(log_dir)
+        # create directory, if it does not exist
+        os.makedirs(log_dir, exist_ok=True)
 
 
     def get_completion(self, prompt):
