@@ -13,9 +13,14 @@ openai_models = {
         "cost_per_1k_tokens_output": 0.0020
     },
     "gpt-4-turbo" : {
-        "model_name": "gpt-4-1106-preview",
+        "model_name": "gpt-4-turbo-2024-04-09",
         "cost_per_1k_tokens_input": 0.01,
         "cost_per_1k_tokens_output": 0.03
+    },
+    "gpt-4o" : {
+        "model_name": "gpt-4o-2024-05-13",
+        "cost_per_1k_tokens_input": 0.005,
+        "cost_per_1k_tokens_output": 0.015
     },
 }
 
