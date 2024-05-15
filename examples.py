@@ -40,9 +40,9 @@ llm = OpenAIClient(api_key=openai_key, model_name="gpt-3.5-turbo-1106", cost_per
 #%% Anthropic
 
 # Initialize Anthropic model using predefined model name and cost
-from aibridge.AnthropicClient import antropic_models, AnthropicClient
-llm = AnthropicClient(api_key=anthropic_key, **antropic_models["claude-3-haiku"])
-llm = AnthropicClient(api_key=anthropic_key, **antropic_models["claude-3-sonnet"])
+from aibridge.AnthropicClient import anthropic_models, AnthropicClient
+llm = AnthropicClient(api_key=anthropic_key, **anthropic_models["claude-3-haiku"])
+llm = AnthropicClient(api_key=anthropic_key, **anthropic_models["claude-3-sonnet"])
 # Note: The ** mechanism is used to unpack the dictionary into keyword arguments
 
 # Initialize Anthropic model by specifying all parameters

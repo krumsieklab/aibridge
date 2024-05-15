@@ -1,4 +1,4 @@
-from aibridge.AnthropicClient import antropic_models, AnthropicClient
+from aibridge.AnthropicClient import anthropic_models, AnthropicClient
 from aibridge.OllamaClient import OllamaClientHTTP
 from aibridge.OpenAIClient import openai_models, OpenAIClient
 
@@ -26,9 +26,9 @@ def init_llm(model_name, api_key=None):
         if api_key is None:
             raise Exception("API key must be provided for Claude models")
         # make sure the model name is in the dictionary
-        if model_name not in antropic_models:
+        if model_name not in anthropic_models:
             raise Exception(f"Model {model_name} not found in claude_models dictionary")
-        return AnthropicClient(api_key=api_key, **antropic_models[model_name], max_per_minute=5, verbose=True)
+        return AnthropicClient(api_key=api_key, **anthropic_models[model_name], max_per_minute=5, verbose=True)
 
     # if model name is not recognized, raise an exception
     else:

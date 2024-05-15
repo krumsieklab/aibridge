@@ -11,7 +11,7 @@ import anthropic  # Assuming anthropic is a mock or actual package for API handl
 from aibridge.llm import LLM
 
 # dictionary of models with model name as key and cost per token as value
-antropic_models = {
+anthropic_models = {
     "claude-3-opus" : {
         "model_name": "claude-3-opus-20240229",
         "cost_per_1k_tokens_input": 0.015,
