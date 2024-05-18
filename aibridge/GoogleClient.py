@@ -1,4 +1,5 @@
-from abc import ABC, abstractmethod
+import time
+
 from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic.schema import predict
 from google.protobuf import json_format
@@ -6,9 +7,21 @@ from google.protobuf.struct_pb2 import Value
 
 from aibridge.llm import LLM
 
-
 class GoogleClient(LLM):
-    def __init__(self, api_endpoint: str, project_id: str, location: str, model_id: str, parameters_dict=None):
+    def __init__(self, api_endpoint: str, project_id: str, location: str, model_id: str, parameters_dict: dict = None):
+        """
+        Initialize the GoogleClient with the necessary parameters to access the Google AI Platform.
+
+        Args:
+            api_endpoint (str): The endpoint of the API.
+            project_id (str): The Google Cloud project ID.
+            location (str): The location of the model.
+            model_id (str): The ID of the model.
+            parameters_dict (dict, optional): The parameters for the prediction request.
+        """
+        # Initialize superclass with no cost structure
+        super().__init__()
+        # Store parameters
         self.client_options = {"api_endpoint": api_endpoint}
         self.client = aiplatform.gapic.PredictionServiceClient(client_options=self.client_options)
         self.endpoint = f"projects/{project_id}/locations/{location}/publishers/google/models/{model_id}"
@@ -20,28 +33,36 @@ class GoogleClient(LLM):
             "topK": 40
         }
 
-    def get_completion(self, prompt):
+    def get_completion(self, prompt: str, max_retries: int = 3) -> str:
+        """
+        Get a completion from the Google AI Platform.
+
+        Args:
+            prompt (str): The prompt to send to the Google AI Platform.
+            max_retries (int, optional): Maximum number of retries in case of failure. Default is 3.
+
+        Returns:
+            str: The completion text from the Google AI Platform.
+        """
         instance_dict = {"content": prompt}
         instance = json_format.ParseDict(instance_dict, Value())
         instances = [instance]
         parameters = json_format.ParseDict(self.parameters_dict, Value())
-        response = self.client.predict(endpoint=self.endpoint, instances=instances, parameters=parameters)
-        predictions = response.predictions
-        if predictions:
-            result = dict(predictions[0]).get('content', '').strip()
-            return result
-        return ""
 
-    def get_token_counter(self):
-        return {
-            "input": -1,
-            "output": -1,
-            "total": --1,
-        }
+        for i in range(max_retries):
+            try:
+                response = self.client.predict(endpoint=self.endpoint, instances=instances, parameters=parameters)
+                predictions = response.predictions
+                if predictions:
+                    result = dict(predictions[0]).get('content', '').strip()
+                    return result
+                return ""
+            except Exception as e:
+                print(f"Google AI Platform error: {str(e)}")
+                print("Retrying...")
+                time.sleep(1)
 
-    def get_cost(self):
-        # we don't know the cost of the Google model, so we just return -1
-          return -1
+        raise Exception(f"Failed to get response from Google AI Platform after {max_retries} retries")
 
 
 

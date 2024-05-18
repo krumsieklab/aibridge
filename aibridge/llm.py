@@ -3,6 +3,23 @@ from abc import ABC, abstractmethod
 # LLM interface class
 class LLM(ABC):
 
+    def __init__(self, cost_structure: dict = None):
+        # Validate and initialize cost structure
+        if cost_structure:
+            if not isinstance(cost_structure, dict) or \
+               "cost_per_1k_tokens_input" not in cost_structure or \
+               "cost_per_1k_tokens_output" not in cost_structure:
+                raise ValueError("Cost structure must be a dictionary with 'cost_per_1k_tokens_input' and 'cost_per_1k_tokens_output' keys.")
+            self.cost_per_1k_tokens_input = cost_structure["cost_per_1k_tokens_input"]
+            self.cost_per_1k_tokens_output = cost_structure["cost_per_1k_tokens_output"]
+        else:
+            self.cost_per_1k_tokens_input = None
+            self.cost_per_1k_tokens_output = None
+
+        # Initialize token counters
+        self.token_counter_input = 0
+        self.token_counter_output = 0
+
     @abstractmethod
     def get_completion(self, prompt):
         """
@@ -10,27 +27,36 @@ class LLM(ABC):
         """
         pass
 
-    @abstractmethod
+    def update_token_counters(self, input_tokens: int, output_tokens: int):
+        # Update internal token counters
+        self.token_counter_input += input_tokens
+        self.token_counter_output += output_tokens
+
     def get_token_counter(self):
-        """
-        Get the current token counter. Must be a dictionary with fields "input", "output", and "total".
-        """
-        pass
+        # Generate dictionary with token counts
+        return {
+            "input": self.token_counter_input,
+            "output": self.token_counter_output,
+            "total": self.token_counter_input + self.token_counter_output
+        }
 
-    @abstractmethod
     def get_cost(self):
-        """
-        Return cost in dollars.
-        """
-        pass
+        # Calculate cost in dollars
+        if self.cost_per_1k_tokens_input is not None and self.cost_per_1k_tokens_output is not None:
+            cost = (self.token_counter_input * self.cost_per_1k_tokens_input / 1000) + \
+                   (self.token_counter_output * self.cost_per_1k_tokens_output / 1000)
+            return cost
+        else:
+            return 0.0
 
-    # print token counter and cost, formatted
+    def get_cost_str(self):
+        # Return formatted cost string
+        cost = self.get_cost()
+        return "${:,.5f}".format(cost)
+
     def print_cost(self):
         """
         Print token counter and cost, formatted.
         """
-
-        # print token counter and cost, formatted
         print("Tokens: {}".format(self.get_token_counter()))
-        print("Cost: ${:,.5f}".format(self.get_cost()))
-
+        print("Cost: {}".format(self.get_cost_str()))

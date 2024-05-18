@@ -10,15 +10,21 @@ class LLMLogger(LLM):
     Wraps an existing LLM object and logs every single prompt/completion pair into a directory.
     """
 
-    def __init__(self, llm: LLM, log_dir: str, delete_existing_dir: bool = False):
+    def __init__(self, llm: LLM, log_dir: str, file_prefix : str = "", delete_existing_dir: bool = False):
         """
         Initialize the LLMSimpleLogger with an existing LLM object and a directory to log prompts and completions.
         By default, the directory is not deleted if it already exists.
+
+        :param llm:                 The LLM object to wrap
+        :param log_dir:             The directory to log prompts and completions
+        :param file_prefix:         Optional suffix to append to the file names
+        :param delete_existing_dir: If True, delete the directory if it already exists
         """
 
         # store parameters
         self.llm = llm
         self.log_dir = log_dir
+        self.file_prefix = file_prefix
         # delete directory if it already exists
         if delete_existing_dir and os.path.exists(log_dir):
             shutil.rmtree(log_dir)
@@ -33,20 +39,11 @@ class LLMLogger(LLM):
         # generate timestamp as yyyy_mm_dd_hh_mm_ss_ffffff
         timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
         # write prompt and completion to two separate files in the log directory
-        with open(os.path.join(self.log_dir, timestamp + "_a_prompt.txt"), "w") as f:
+        with open(os.path.join(self.log_dir, f"{self.file_prefix}{timestamp}_a_prompt.txt"), "w") as f:
             f.write(prompt)
-        with open(os.path.join(self.log_dir, timestamp + "_b_completion.txt"), "w") as f:
+        with open(os.path.join(self.log_dir, f"{self.file_prefix}{timestamp}_b_completion.txt"), "w") as f:
             f.write(completion)
 
         # return completion
         return completion
-
-
-    def get_token_counter(self):
-        # just call the wrapped LLM object
-        return self.llm.get_token_counter()
-
-    def get_cost(self):
-        # just call the wrapped LLM object
-        return self.llm.get_cost()
 
