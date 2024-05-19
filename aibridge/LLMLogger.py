@@ -47,3 +47,8 @@ class LLMLogger(LLM):
         # return completion
         return completion
 
+
+    # delegate attribute access to the wrapped LLM object
+    def __getattr__(self, attr):
+        return getattr(self.llm, attr)
+
