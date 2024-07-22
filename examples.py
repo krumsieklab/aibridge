@@ -36,6 +36,8 @@ llm = OpenAIClient(api_key=openai_key, model_name="gpt-3.5-turbo-1106", cost_str
 
 # There is also a "temperature" parameter that can be set, see documentation
 
+print(llm.get_completion("Who are you?"))
+
 
 #%% Anthropic
 
@@ -48,6 +50,8 @@ llm = AnthropicClient(api_key=anthropic_key, **anthropic_models["claude-3-sonnet
 # Initialize Anthropic model by specifying all parameters
 llm = AnthropicClient(api_key=anthropic_key, model_name="claude-3-opus-20240229", cost_structure={"cost_per_1k_tokens_input":0.015, "cost_per_1k_tokens_output":0.075})
 
+print(llm.get_completion("Who are you?"))
+
 
 #%% Llama
 
@@ -55,6 +59,42 @@ llm = AnthropicClient(api_key=anthropic_key, model_name="claude-3-opus-20240229"
 from aibridge.OllamaClient import OllamaClientHTTP
 llm = OllamaClientHTTP(url="http://localhost:11434/api/generate", model_name="llama3:70b", verbose=True)
 # Note: This particular example assumes that the docker runs locally or has been port-forwarded to localhost
+print(llm.get_completion("Who are you?"))
+
+
+#%% LM Studio
+
+# Initialize LM Studio model (which internally uses the openai API)
+# The model cannot be parameterized here, it'll connect to whatever server is running in LM Studio
+from aibridge.LMStudioClient import LMStudioClient
+llm = LMStudioClient(url="http://localhost:1234/v1")
+print(llm.get_completion("Who are you?"))
+
+
+#%% Google Client
+
+# Setup is a bit more elaborate, since we have to communicate through the Google Cloud API
+# It'll require prior authentication and setup of the Google Cloud SDK via 'gcloud auth ...'
+
+# Create an instance of GoogleClient
+from aibridge.GoogleClient import GoogleClient
+llm = GoogleClient(
+    api_endpoint="us-central1-aiplatform.googleapis.com",
+    project_id="studious-pulsar-397018",
+    location="us-central1",
+    model_id="medlm-large",
+    parameters_dict={
+      "candidateCount": 1,
+      "maxOutputTokens": 500,
+      "temperature": 0.2,
+      "topP": 0.8,
+      "topK": 40
+    }
+)
+
+print(llm.get_completion("Who are you?"))
+
+
 
 
 #%% Logging wrapper
