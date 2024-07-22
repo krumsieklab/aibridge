@@ -8,12 +8,12 @@ class LMStudioClient(LLM):
     Accesses an LM Studio server via the OpenAI API.
     """
 
-    def __init__(self, base_url: str, system_prompt: str = "You are a helpful AI assistant.", openai_args: dict = None, verbose: bool = False):
+    def __init__(self, url: str, system_prompt: str = "You are a helpful AI assistant.", openai_args: dict = None, verbose: bool = False):
         """
         Initialize the LMStudioClient with the base URL, model name, system prompt, and other parameters.
 
         Args:
-            base_url (str): Base URL of the LM Studio server.
+            url (str): Base URL of the LM Studio server.
             system_prompt (str): System prompt to use for the assistant.
             openai_args (dict, optional): Additional arguments for the OpenAI API call.
             verbose (bool, optional): If True, print additional information.
@@ -22,14 +22,14 @@ class LMStudioClient(LLM):
         super().__init__()
         # Store parameters
         self.api_key = "lm-studio"
-        self.base_url = base_url
+        self.url = url
         self.system_prompt = system_prompt
         self.verbose = verbose
         self.openai_args = openai_args if openai_args else {}
         self.openai_args["model"] = "irrelevant_string"
         # Initialize OpenAI client
         os.environ["OPENAI_API_KEY"] = self.api_key
-        self.client = OpenAI(base_url=base_url)
+        self.client = OpenAI(base_url=url)
 
     def get_completion(self, prompt: str, max_retries: int = 3) -> str:
         """
@@ -76,7 +76,7 @@ class LMStudioClient(LLM):
 # test code
 if __name__ == "__main__":
     llm = LMStudioClient(
-        base_url="http://localhost:1234/v1",
+        url="http://localhost:1234/v1",
         system_prompt="You are a helpful AI assistant that will take the user's instructions very seriously and output nothing else except what was asked for.",
         verbose=True
     )
