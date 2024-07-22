@@ -6,10 +6,10 @@ from aibridge.llm import LLM
 
 openai_models = {
     "gpt-3.5-turbo": {
-        "model_name": "gpt-3.5-turbo-1106",
+        "model_name": "gpt-3.5-turbo-0125",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.0010,
-            "cost_per_1k_tokens_output": 0.0020
+            "cost_per_1k_tokens_input": 0.0005,
+            "cost_per_1k_tokens_output": 0.0015
         }
     },
     "gpt-4-turbo": {
@@ -24,6 +24,13 @@ openai_models = {
         "cost_structure": {
             "cost_per_1k_tokens_input": 0.005,
             "cost_per_1k_tokens_output": 0.015
+        }
+    },
+    "gpt-4o-mini": {
+        "model_name": "gpt-4o-mini-2024-07-18",
+        "cost_structure": {
+            "cost_per_1k_tokens_input": 0.00015,
+            "cost_per_1k_tokens_output": 0.0006
         }
     }
 }
