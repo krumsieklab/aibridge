@@ -37,7 +37,8 @@ openai_models = {
 
 class OpenAIClient(LLM):
 
-    def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, openai_args: dict = None):
+    def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, openai_args: dict = None,
+                 system_prompt: str = "You are a helpful AI assistant."):
         """
         Initialize the OpenAIClient with the API key, model name, optional cost structure, and OpenAI API arguments.
 
@@ -60,6 +61,8 @@ class OpenAIClient(LLM):
         self.model_name = model_name
         self.openai_args = openai_args if openai_args else {}
         self.openai_args["model"] = model_name
+        # Store system prompt
+        self.system_prompt = system_prompt
         # Initialize OpenAI client
         os.environ["OPENAI_API_KEY"] = api_key
         self.client = OpenAI()
@@ -81,7 +84,7 @@ class OpenAIClient(LLM):
                 # Run prompt with OpenAI API
                 response = self.client.chat.completions.create(
                     messages=[
-                        {"role": "system", "content": "You are a helpful AI assistant."},
+                        {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": prompt}
                     ],
                     **self.openai_args

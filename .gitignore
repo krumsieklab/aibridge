@@ -3,3 +3,7 @@ aibridge/__pycache__
 aibridge.egg-info
 jandocs
 .DS_Store
+aibridge/llm_logs
+__pycache__
+logs
+archive

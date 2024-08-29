@@ -36,3 +36,13 @@ def truncate_text_by_tokens(text, max_tokens):
         return text
 
 
+
+
+def clean_json_output(str):
+    '''
+    Especially OpenAI's gpt4 sometimes adds ``` around the output.
+    Remove all lines that start with ``` (plus the rest of those lines if there are additional characters)
+    '''
+    lines = str.split('\n')
+    cleaned_lines = [line for line in lines if not line.startswith('```')]
+    return '\n'.join(cleaned_lines)

@@ -33,7 +33,8 @@ class AnthropicClient(LLM):
     AnthropicClient class to interact with the Claude API.
     """
 
-    def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, anthropic_args: dict = None):
+    def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, anthropic_args: dict = None,
+                 system_prompt: str = "You are a helpful AI assistant."):
         """
         Initialize the AnthropicClient with the API key, model name, optional cost structure, and Anthropic API arguments.
 
@@ -49,6 +50,8 @@ class AnthropicClient(LLM):
         self.model_name = model_name
         self.anthropic_args = anthropic_args if anthropic_args else {}
         self.anthropic_args["model"] = model_name
+        # Store system prompt
+        self.system_prompt = system_prompt
         # default settings for max_tokens, because it is required
         if "max_tokens" not in self.anthropic_args:
             self.anthropic_args["max_tokens"] = 1024
@@ -75,6 +78,7 @@ class AnthropicClient(LLM):
 
                 # Call the API
                 response = self.client.messages.create(
+                    system=self.system_prompt,
                     messages=[
                         {"role": "user", "content": prompt}
                     ],

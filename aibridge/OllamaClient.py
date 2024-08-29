@@ -9,7 +9,8 @@ class OllamaClientHTTP(LLM):
     Best practice is to use the dockerized version of the server.
     """
 
-    def __init__(self, url: str, model_name: str, verbose: bool = False, ollama_args: dict = None):
+    def __init__(self, url: str, model_name: str, verbose: bool = False, ollama_args: dict = None,
+                 system_prompt: str = ""):
         """
         Initialize the OllamaClientHTTP with the URL of the server, the model name, and other parameters.
 
@@ -27,6 +28,7 @@ class OllamaClientHTTP(LLM):
         self.verbose = verbose
         self.ollama_args = ollama_args if ollama_args else {}
         self.ollama_args["model"] = model_name
+        self.system_prompt = system_prompt
 
     @staticmethod
     def _remove_braille_characters(input_string):
@@ -46,6 +48,10 @@ class OllamaClientHTTP(LLM):
         """
         if self.verbose:
             print("Sending request to server...")
+
+        # if there is a system prompt, add it to the beginning of the prompt, followed by a newline
+        if self.system_prompt:
+            prompt = self.system_prompt + "\n" + prompt
 
         # Retry loop
         for i in range(max_retries):
