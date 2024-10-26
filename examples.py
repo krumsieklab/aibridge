@@ -32,7 +32,7 @@ llm = OpenAIClient(api_key=openai_key, **openai_models["gpt-4-turbo"])
 # Note: The ** mechanism is used to unpack the dictionary into keyword arguments
 
 # Initialize OpenAI model by specifying all parameters
-llm = OpenAIClient(api_key=openai_key, model_name="gpt-3.5-turbo-1106", cost_structure={"cost_per_1k_tokens_input":0.0010, "cost_per_1k_tokens_output":0.0020})
+llm = OpenAIClient(api_key=openai_key, model_name="gpt-3.5-turbo-1106", cost_structure={"cost_per_1M_tokens_input":1.0, "cost_per_1M_tokens_output":2.0})
 
 # There is also a "temperature" parameter that can be set, see documentation
 
@@ -48,7 +48,7 @@ llm = AnthropicClient(api_key=anthropic_key, **anthropic_models["claude-3-sonnet
 # Note: The ** mechanism is used to unpack the dictionary into keyword arguments
 
 # Initialize Anthropic model by specifying all parameters
-llm = AnthropicClient(api_key=anthropic_key, model_name="claude-3-opus-20240229", cost_structure={"cost_per_1k_tokens_input":0.015, "cost_per_1k_tokens_output":0.075})
+llm = AnthropicClient(api_key=anthropic_key, model_name="claude-3-opus-20240229", cost_structure={"cost_per_1M_tokens_input":15.0, "cost_per_1M_tokens_output":75.0})
 
 print(llm.get_completion("Who are you?"))
 

@@ -3,34 +3,33 @@ import time
 from openai import OpenAI
 
 from aibridge.llm import LLM
-
 openai_models = {
     "gpt-3.5-turbo": {
-        "model_name": "gpt-3.5-turbo-0125",
+        "model_name": "gpt-3.5-turbo",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.0005,
-            "cost_per_1k_tokens_output": 0.0015
+            "cost_per_1M_tokens_input": 3.00,
+            "cost_per_1M_tokens_output": 6.00
         }
     },
     "gpt-4-turbo": {
-        "model_name": "gpt-4-turbo-2024-04-09",
+        "model_name": "gpt-4-turbo",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.01,
-            "cost_per_1k_tokens_output": 0.03
+            "cost_per_1M_tokens_input": 10.00,
+            "cost_per_1M_tokens_output": 30.00
         }
     },
     "gpt-4o": {
-        "model_name": "gpt-4o-2024-05-13",
+        "model_name": "gpt-4o",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.005,
-            "cost_per_1k_tokens_output": 0.015
+            "cost_per_1M_tokens_input": 2.5,
+            "cost_per_1M_tokens_output": 10.00
         }
     },
     "gpt-4o-mini": {
-        "model_name": "gpt-4o-mini-2024-07-18",
+        "model_name": "gpt-4o-mini",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.00015,
-            "cost_per_1k_tokens_output": 0.0006
+            "cost_per_1M_tokens_input": 0.15,
+            "cost_per_1M_tokens_output": 0.60
         }
     }
 }

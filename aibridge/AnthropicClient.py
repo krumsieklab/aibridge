@@ -3,30 +3,31 @@ import anthropic  # Assuming anthropic is a mock or actual package for API handl
 
 from aibridge.llm import LLM
 
-# Dictionary of models with model name as key and cost structure as value
+# Dictionary of models with model name as key and cost structure as value (per million tokens)
 anthropic_models = {
     "claude-3-opus": {
-        "model_name": "claude-3-opus-20240229",
+        "model_name": "claude-3-opus",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.015,
-            "cost_per_1k_tokens_output": 0.075
+            "cost_per_1M_tokens_input": 15.0,
+            "cost_per_1M_tokens_output": 75.0
         }
     },
-    "claude-3-sonnet": {
-        "model_name": "claude-3-sonnet-20240229",
+    "claude-3.5-sonnet": {
+        "model_name": "claude-3.5-sonnet",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.003,
-            "cost_per_1k_tokens_output": 0.0015
+            "cost_per_1M_tokens_input": 3.0,
+            "cost_per_1M_tokens_output": 15
         }
     },
-    "claude-3-haiku": {
-        "model_name": "claude-3-haiku-20240307",
+    "claude-3.5-haiku": {
+        "model_name": "claude-3.5-haiku",
         "cost_structure": {
-            "cost_per_1k_tokens_input": 0.00025,
-            "cost_per_1k_tokens_output": 0.00125
+            "cost_per_1M_tokens_input": 0.25,
+            "cost_per_1M_tokens_output": 1.25
         }
     }
 }
+
 
 class AnthropicClient(LLM):
     """

@@ -7,14 +7,14 @@ class LLM(ABC):
         # Validate and initialize cost structure
         if cost_structure:
             if not isinstance(cost_structure, dict) or \
-               "cost_per_1k_tokens_input" not in cost_structure or \
-               "cost_per_1k_tokens_output" not in cost_structure:
-                raise ValueError("Cost structure must be a dictionary with 'cost_per_1k_tokens_input' and 'cost_per_1k_tokens_output' keys.")
-            self.cost_per_1k_tokens_input = cost_structure["cost_per_1k_tokens_input"]
-            self.cost_per_1k_tokens_output = cost_structure["cost_per_1k_tokens_output"]
+               "cost_per_1M_tokens_input" not in cost_structure or \
+               "cost_per_1M_tokens_output" not in cost_structure:
+                raise ValueError("Cost structure must be a dictionary with 'cost_per_1M_tokens_input' and 'cost_per_1M_tokens_output' keys.")
+            self.cost_per_1M_tokens_input = cost_structure["cost_per_1M_tokens_input"]
+            self.cost_per_1M_tokens_output = cost_structure["cost_per_1M_tokens_output"]
         else:
-            self.cost_per_1k_tokens_input = None
-            self.cost_per_1k_tokens_output = None
+            self.cost_per_1M_tokens_input = None
+            self.cost_per_1M_tokens_output = None
 
         # Initialize token counters
         self.token_counter_input = 0
@@ -42,9 +42,9 @@ class LLM(ABC):
 
     def get_cost(self):
         # Calculate cost in dollars
-        if self.cost_per_1k_tokens_input is not None and self.cost_per_1k_tokens_output is not None:
-            cost = (self.token_counter_input * self.cost_per_1k_tokens_input / 1000) + \
-                   (self.token_counter_output * self.cost_per_1k_tokens_output / 1000)
+        if self.cost_per_1M_tokens_input is not None and self.cost_per_1M_tokens_output is not None:
+            cost = (self.token_counter_input * self.cost_per_1M_tokens_input / 1000000) + \
+                   (self.token_counter_output * self.cost_per_1M_tokens_output / 1000000)
             return cost
         else:
             return 0.0
