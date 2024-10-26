@@ -1,35 +1,50 @@
 import os
 import warnings
 
-from transformers import GPT2TokenizerFast
+#from transformers import GPT2TokenizerFast
+import tiktoken
 
 
-def count_tokens(text):
-    # "static" variable via function attribute
-    if not hasattr(count_tokens, "tokenizer"):
-        os.environ["TOKENIZERS_PARALLELISM"] = "false"
-        count_tokens.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        return len(count_tokens.tokenizer(text)['input_ids'])
+def count_tokens(txt):
+    """
+    Count the number of tokens in the given text using GPT-4's tokenizer.
+
+    Args:
+        txt (str): The input text to tokenize.
+
+    Returns:
+        int: The number of tokens.
+    """
+    encoding = tiktoken.encoding_for_model('gpt-4o')
+    return len(encoding.encode(txt))
+
 
 
 def truncate_text_by_tokens(text, max_tokens):
-    # Initialize the tokenizer once and reuse it to avoid reinitialization overhead
-    if not hasattr(truncate_text_by_tokens, "tokenizer"):
-        os.environ["TOKENIZERS_PARALLELISM"] = "false"
-        truncate_text_by_tokens.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+    """
+    Truncate the input text to a maximum number of tokens using GPT-4's tokenizer.
 
-    # Tokenize the input text and suppress any warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        tokens = truncate_text_by_tokens.tokenizer(text)['input_ids']
+    Args:
+        text (str): The input text to tokenize and truncate.
+        max_tokens (int): The maximum number of tokens allowed.
+
+    Returns:
+        str: The truncated text if the token count exceeds max_tokens; otherwise, the original text.
+    """
+    # Initialize the tokenizer once and reuse it to avoid reinitialization overhead
+    if not hasattr(truncate_text_by_tokens, "encoding"):
+        truncate_text_by_tokens.encoding = tiktoken.encoding_for_model('gpt-4')
+
+    encoding = truncate_text_by_tokens.encoding
+
+    # Encode the input text
+    tokens = encoding.encode(text)
 
     # Truncate the tokens if their count exceeds max_tokens
     if len(tokens) > max_tokens:
         truncated_tokens = tokens[:max_tokens]
         # Decode the truncated tokens back to text
-        truncated_text = truncate_text_by_tokens.tokenizer.decode(truncated_tokens, skip_special_tokens=True)
+        truncated_text = encoding.decode(truncated_tokens)
         return truncated_text
     else:
         # Return the original text if token count is within the limit
