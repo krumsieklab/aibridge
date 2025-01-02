@@ -4,6 +4,7 @@ import os
 import re
 import aibridge.llm_commons as llm_commons
 from aibridge.OpenAIClient import OpenAIClient, openai_models
+from aibridge.llm import LLM
 
 promptstr_pre_example = "Here is an example output in JSON format:"
 promptstr_json_only = "Output nothing but JSON, no extra whitespaces, no extra characters, no extra lines, no commentary:"
@@ -109,6 +110,10 @@ def complete_and_validate_autoschema(
     Expects the prompt to end with a <example></example> block, which will then be used to generate a schema.
     Furthermore, this function will automatically add prompt text around the example to form a complete prompt.
     '''
+
+    # throw an error if llm is not of type LLM
+    if not isinstance(llm, LLM):
+        raise ValueError("llm must be an instance of LLM")
 
     # load the prompt template
     with open(prompt_path, "r") as f:
