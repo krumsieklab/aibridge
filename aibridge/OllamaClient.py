@@ -9,7 +9,7 @@ class OllamaClientHTTP(LLM):
     Best practice is to use the dockerized version of the server.
     """
 
-    def __init__(self, url: str, model_name: str, verbose: bool = False, ollama_args: dict = None,
+    def __init__(self, model_name: str, url: str = "http://localhost:11434/api/generate", verbose: bool = False, ollama_args: dict = None,
                  system_prompt: str = ""):
         """
         Initialize the OllamaClientHTTP with the URL of the server, the model name, and other parameters.

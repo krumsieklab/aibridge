@@ -31,6 +31,20 @@ openai_models = {
             "cost_per_1M_tokens_input": 0.15,
             "cost_per_1M_tokens_output": 0.60
         }
+    },
+    "o1": {
+        "model_name": "o1",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 15,
+            "cost_per_1M_tokens_output": 60
+        }
+    },
+    "o1-mini": {
+        "model_name": "o1-mini",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 3,
+            "cost_per_1M_tokens_output": 12
+        }
     }
 }
 
@@ -77,16 +91,24 @@ class OpenAIClient(LLM):
         Returns:
             str: The completion text from the OpenAI API.
         """
+
+
+        # build messages dict
+        # if this is one of the "o1..." models, then we cannot give a system role
+        if self.model_name.startswith("o1"):
+            messages = [{"role": "user", "content": prompt}]
+        else:
+            messages = [
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": prompt}
+            ]
+
         # Retry loop
         for i in range(max_retries):
             try:
                 # Run prompt with OpenAI API
                 response = self.client.chat.completions.create(
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": prompt}
-                    ],
-                    **self.openai_args
+                    messages=messages, **self.openai_args
                 )
                 # Update internal token counters
                 self.update_token_counters(response.usage.prompt_tokens, response.usage.completion_tokens)
