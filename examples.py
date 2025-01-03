@@ -130,3 +130,78 @@ while True:
 # once the user typed "quit", print the entire conversation
 print("Conversation:")
 print(history)
+
+#%% Structured helper example, one-value output
+from aibridge.OpenAIClient import openai_models, OpenAIClient
+from aibridge import llm_structured_helper
+llm = OpenAIClient(api_key=openai_key, **openai_models["gpt-4o-mini"])
+
+prompt_template = """
+What is the capital of {country}?
+<example>
+{"capital": "Paris"}
+</example>
+"""
+
+# generate variable dictionary
+variable_dict = {"country": "Italy"}
+# run prompt
+result = llm_structured_helper.complete_and_validate_autoschema(
+    llm=llm,
+    prompt_template=prompt_template,
+    variable_dict=variable_dict
+)
+print(result)
+
+
+#%% Structured helper example, multiple-value output
+from aibridge.OpenAIClient import openai_models, OpenAIClient
+from aibridge import llm_structured_helper
+llm = OpenAIClient(api_key=openai_key, **openai_models["gpt-4o-mini"])
+
+prompt_template = """
+What are capital, total population, and continent of {country}?
+<example>
+{"capital": "Paris", "country_population": 67000000, "continent": "Europe"}
+</example>
+"""
+
+# generate variable dictionary
+variable_dict = {"country": "Argentina"}
+# run prompt
+result = llm_structured_helper.complete_and_validate_autoschema(
+    llm=llm,
+    prompt_template=prompt_template,
+    variable_dict=variable_dict
+)
+print(result)
+
+
+
+
+#%% Structured helper example, list output
+from aibridge.OpenAIClient import openai_models, OpenAIClient
+from aibridge import llm_structured_helper
+llm = OpenAIClient(api_key=openai_key, **openai_models["gpt-4o-mini"])
+
+prompt_template = """
+Generate a list of 5 books from the {genre} genre. 
+The output must include book title, author, and year of publication.
+<example>
+[
+    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald", "year": 1925},
+    "..."   
+]
+</example>
+"""
+# Note: The "..." is specific entry we use to indicate that this is a list of repeating items.
+
+# generate variable dictionary
+variable_dict = {"genre": "science fiction"}
+# run prompt
+result = llm_structured_helper.complete_and_validate_autoschema(
+    llm=llm,
+    prompt_template=prompt_template,
+    variable_dict=variable_dict
+)
+print(result)
