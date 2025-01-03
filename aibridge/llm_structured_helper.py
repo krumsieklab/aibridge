@@ -104,7 +104,7 @@ def generate_json_schema(example_json_str):
     }
 
 def complete_and_validate_autoschema(
-    llm, prompt_path, variable_dict
+    llm, prompt_template, variable_dict
 ):
     '''
     Expects the prompt to end with a <example></example> block, which will then be used to generate a schema.
@@ -115,9 +115,6 @@ def complete_and_validate_autoschema(
     if not isinstance(llm, LLM):
         raise ValueError("llm must be an instance of LLM")
 
-    # load the prompt template
-    with open(prompt_path, "r") as f:
-        prompt_template = f.read()
     # trim
     prompt_template = prompt_template.strip()
     # validate that it ends with <example>.*</example>
