@@ -51,7 +51,7 @@ openai_models = {
 class OpenAIClient(LLM):
 
     def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, openai_args: dict = None,
-                 system_prompt: str = "You are a helpful AI assistant."):
+                 system_prompt: str = "You are a helpful AI assistant.", custom_url: str = None):
         """
         Initialize the OpenAIClient with the API key, model name, optional cost structure, and OpenAI API arguments.
 
@@ -78,7 +78,11 @@ class OpenAIClient(LLM):
         self.system_prompt = system_prompt
         # Initialize OpenAI client
         os.environ["OPENAI_API_KEY"] = api_key
-        self.client = OpenAI()
+        # initialize OpenAI client
+        if custom_url:
+            self.client = OpenAI(base_url=custom_url)
+        else:
+            self.client = OpenAI()
 
     def get_completion(self, prompt, max_retries=3):
         """

@@ -10,6 +10,7 @@ Example codes for the usage of the aibridge package.
 ##% Define API keys
 openai_key = "sk-..."
 anthropic_key = "sk-..."
+novita_key = "..."
 
 
 #%% Quickstart
@@ -53,7 +54,7 @@ llm = AnthropicClient(api_key=anthropic_key, model_name="claude-3-opus-20240229"
 print(llm.get_completion("Who are you?"))
 
 
-#%% Llama
+#%% Ollama
 
 # Initialize HTTP client to access an Ollama server
 from aibridge.OllamaClient import OllamaClientHTTP
@@ -69,6 +70,23 @@ print(llm.get_completion("Who are you?"))
 from aibridge.LMStudioClient import LMStudioClient
 llm = LMStudioClient(url="http://localhost:1234/v1")
 print(llm.get_completion("Who are you?"))
+
+
+#%% Novita via OpenAI module
+from aibridge.OpenAIClient import OpenAIClient
+
+# https://novita.ai/model-api/pricing
+params = {
+    "custom_url": "https://api.novita.ai/v3/openai",
+    "model_name": "meta-llama/llama-3.1-8b-instruct",
+    "cost_structure": {
+        "cost_per_1M_tokens_input": 0.39,
+        "cost_per_1M_tokens_output": 0.39
+    }
+}
+
+llm = OpenAIClient(api_key=novita_key, **params)
+print(llm.get_completion("What is your model name?"))
 
 
 #%% Google Client
