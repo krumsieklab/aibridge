@@ -97,7 +97,11 @@ def generate_json_schema(example_json_str):
         else:
             return {"type": "any"}
 
-    example_data = json.loads(example_json_str)
+    try:
+        example_data = json.loads(example_json_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"The example JSON string was not valid: {e}")
+
     return {
         "$schema": "http://json-schema.org/draft-07/schema#",
         **infer_schema(example_data)
