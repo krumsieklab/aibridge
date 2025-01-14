@@ -60,3 +60,11 @@ class LLM(ABC):
         """
         print("Tokens: {}".format(self.get_token_counter()))
         print("Cost: {}".format(self.get_cost_str()))
+
+    def identify(self):
+        """
+        By default, just return the class name.
+        """
+        return self.__class__.__name__
+
+

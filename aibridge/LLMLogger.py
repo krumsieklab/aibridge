@@ -52,3 +52,7 @@ class LLMLogger(LLM):
     def __getattr__(self, attr):
         return getattr(self.llm, attr)
 
+    # identify should say Logger(identify() of inner LLM)
+    def identify(self):
+        return f"Logger({self.llm.identify()})"
+
