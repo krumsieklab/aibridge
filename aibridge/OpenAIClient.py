@@ -58,7 +58,8 @@ openai_models = {
 class OpenAIClient(LLM):
 
     def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, openai_args: dict = None,
-                 system_prompt: str = "You are a helpful AI assistant.", custom_url: str = None):
+                 system_prompt: str = "You are a helpful AI assistant.", custom_url: str = None,
+                 reasoning_effort: str = "medium"):
         """
         Initialize the OpenAIClient with the API key, model name, optional cost structure, and OpenAI API arguments.
 
@@ -90,6 +91,12 @@ class OpenAIClient(LLM):
             self.client = OpenAI(base_url=custom_url)
         else:
             self.client = OpenAI()
+        # if reasoning_effort was changed from default, and this is NOT a model starting with "o", throw an error
+        if reasoning_effort != "medium" and not model_name.startswith("o"):
+            raise ValueError("Reasoning effort can only be set for OpenAI models starting with 'o'.")
+        # if this IS a model starting with "o", set reasoning effort
+        if model_name.startswith("o"):
+            self.openai_args["reasoning_effort"] = reasoning_effort
 
     def get_completion(self, prompt, max_retries=3):
         """
