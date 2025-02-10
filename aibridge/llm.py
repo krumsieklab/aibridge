@@ -64,7 +64,12 @@ class LLM(ABC):
     def identify(self):
         """
         By default, just return the class name.
+        Add the model name in parentheses, is the class has a 'model_name' attribute.
         """
-        return self.__class__.__name__
+        if hasattr(self, "model_name"):
+            return f"{self.__class__.__name__}({self.model_name})"
+        else:
+            return self.__class__.__name__
+
 
 
