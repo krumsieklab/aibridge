@@ -6,7 +6,7 @@ from aibridge.llm import LLM  # Adjust import path as needed
 
 class VertexAIClient(LLM):
     """
-    VertexAIClient class to interact with Google Cloud's Vertex AI Generative Models (e.g., gemini-1.0-pro-001).
+    VertexAIClient class to interact with Google Cloud's Vertex AI Generative Models.
     """
 
     def __init__(
@@ -33,17 +33,19 @@ class VertexAIClient(LLM):
                   "cost_per_1M_tokens_output": float
                 }
                 Defaults to None.
-            system_prompt (str, optional): A system-level prompt to prepend to user prompts. Defaults to a simple helper message.
-            vertexai_args (dict, optional): Additional arguments for Vertex AI generation. For example:
+            system_prompt (str, optional): A system-level prompt to prepend to user prompts.
+                                           Defaults to a simple helper message.
+            vertexai_args (dict, optional): Additional arguments for Vertex AI generation.
+                                            For example:
                 {
                     "generation_config": {...},
                     "safety_settings": {...},
                     "stream": True/False
                 }
                 Defaults to None.
-            max_retries (int, optional): Maximum number of retries in case of API call failure. Defaults to 3.
+            max_retries (int, optional): Maximum number of retries in case of API call failure.
+                                         Defaults to 3.
         """
-        # Initialize the abstract LLM class (handles token counters and optional cost structure).
         super().__init__(cost_structure)
 
         # Initialize Vertex AI
@@ -56,18 +58,22 @@ class VertexAIClient(LLM):
 
         # Merge or define default Vertex AI arguments
         self.vertexai_args = vertexai_args if vertexai_args else {}
-        # Common defaults
         self.generation_config = self.vertexai_args.get("generation_config", {
             "max_output_tokens": 8000,
-            "temperature": 1.0,
+            "temperature": 0.9,
             "top_p": 0.95,
         })
         self.safety_settings = self.vertexai_args.get("safety_settings", {
-            generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH:    generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
-            generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
-            generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
-            generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT:         generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH:
+                generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT:
+                generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT:
+                generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT:
+                generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
         })
+        # Whether we want streaming responses or not
         self.stream = self.vertexai_args.get("stream", False)
 
         # Create a Vertex AI Generative Model instance
@@ -79,7 +85,8 @@ class VertexAIClient(LLM):
 
         Args:
             prompt (str): The user prompt to send to Vertex AI.
-            max_retries (int, optional): Number of retries in case of transient errors. Defaults to self.max_retries.
+            max_retries (int, optional): Number of retries in case of transient errors.
+                                         Defaults to self.max_retries.
 
         Returns:
             str: The generated text from Vertex AI.
@@ -87,33 +94,37 @@ class VertexAIClient(LLM):
         if max_retries is None:
             max_retries = self.max_retries
 
-        # Combine system prompt with user prompt
         final_prompt = f"{self.system_prompt}\n{prompt}" if self.system_prompt else prompt
 
-        # Retry loop
         for attempt in range(max_retries):
             try:
-                # Send the request to the Vertex AI model
-                responses = self.model.generate_content(
-                    [final_prompt],
-                    generation_config=self.generation_config,
-                    safety_settings=self.safety_settings,
-                    stream=self.stream,
-                )
+                if self.stream:
+                    # In streaming mode, generate_content returns an iterator of GenerationResponse
+                    responses = self.model.generate_content(
+                        [final_prompt],
+                        generation_config=self.generation_config,
+                        safety_settings=self.safety_settings,
+                        stream=True,
+                    )
+                    total_text = ""
+                    for response in responses:
+                        if hasattr(response, "text"):
+                            total_text += response.text
+                else:
+                    # In non-streaming mode, generate_content returns a single GenerationResponse object
+                    response = self.model.generate_content(
+                        [final_prompt],
+                        generation_config=self.generation_config,
+                        safety_settings=self.safety_settings,
+                        stream=False,
+                    )
+                    total_text = response.text if hasattr(response, "text") else ""
 
-                # Accumulate text from streaming or non-streaming responses
-                total_text = ""
-                for response in responses:
-                    if hasattr(response, "text"):
-                        total_text += response.text
-
-                # Update internal token counters
-                # (Vertex AI does not currently return usage info, so we approximate)
+                # Update internal token counters (approximation)
                 input_tokens = len(final_prompt.split())
                 output_tokens = len(total_text.split())
                 self.update_token_counters(input_tokens, output_tokens)
 
-                # Return the final combined text
                 return total_text.strip()
 
             except Exception as e:
@@ -121,7 +132,6 @@ class VertexAIClient(LLM):
                 print("  Retrying...")
                 time.sleep(1)
 
-        # Raise an exception after exhausting retries
         raise Exception(
             f"Failed to get response from Vertex AI after {max_retries} retries"
         )
