@@ -7,8 +7,8 @@ openai_models = {
     "gpt-3.5-turbo": {
         "model_name": "gpt-3.5-turbo",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 3.00,
-            "cost_per_1M_tokens_output": 6.00
+            "cost_per_1M_tokens_input": 0.5,
+            "cost_per_1M_tokens_output": 1.5
         }
     },
     "gpt-4-turbo": {
@@ -40,6 +40,13 @@ openai_models = {
         }
     },
     "o1-mini": {
+        "model_name": "o1-mini",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 3,
+            "cost_per_1M_tokens_output": 12
+        }
+    },
+    "o3-mini": {
         "model_name": "o1-mini",
         "cost_structure": {
             "cost_per_1M_tokens_input": 3,
