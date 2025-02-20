@@ -54,5 +54,6 @@ class LLMLogger(LLM):
 
     # identify should say Logger(identify() of inner LLM)
     def identify(self):
-        return f"LLMLogger({self.llm.identify()})"
+        # logger needs to be invisible, call identify on the wrapped LLM object
+        return self.llm.identify()
 
