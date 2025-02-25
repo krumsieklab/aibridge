@@ -47,6 +47,9 @@ class LLMLogger(LLM):
         # return completion
         return completion
 
+    # function to change the prefix without needing to re-create the object
+    def set_prefix(self, prefix: str):
+        self.file_prefix = prefix
 
     # delegate attribute access to the wrapped LLM object
     def __getattr__(self, attr):
