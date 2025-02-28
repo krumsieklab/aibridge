@@ -59,7 +59,7 @@ class OpenAIClient(LLM):
 
     def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, openai_args: dict = None,
                  system_prompt: str = "You are a helpful AI assistant.", custom_url: str = None,
-                 reasoning_effort: str = "medium"):
+                 reasoning_effort: str = None):
         """
         Initialize the OpenAIClient with the API key, model name, optional cost structure, and OpenAI API arguments.
 
@@ -91,12 +91,22 @@ class OpenAIClient(LLM):
             self.client = OpenAI(base_url=custom_url)
         else:
             self.client = OpenAI()
-        # if reasoning_effort was changed from default, and this is NOT a model starting with "o", throw an error
-        if reasoning_effort != "medium" and not model_name.startswith("o"):
-            raise ValueError("Reasoning effort can only be set for OpenAI models starting with 'o'.")
-        # if this IS a model starting with "o", set reasoning effort
-        if model_name.startswith("o"):
-            self.openai_args["reasoning_effort"] = reasoning_effort
+
+
+
+        # if reasoning effort is given, this must be a model starting with "o"
+        if reasoning_effort and not model_name.startswith("o"):
+            raise ValueError("Reasoning effort is only supported for models starting with 'o'")
+        # but specifically, it cannot be given for "o1-mini"
+        if reasoning_effort and model_name == "o1-mini":
+            raise ValueError("Reasoning effort is not supported for 'o1-mini'")
+        # if reasoning effort is given, it must be "low", "medium", or "high"
+        if reasoning_effort and reasoning_effort not in ["low", "medium", "high"]:
+            raise ValueError("Reasoning effort must be 'low', 'medium', or 'high'")
+        # if it is an "o" model EXCEPT "o1-mini", a reasoning effort MUST be given
+        if model_name.startswith("o") and model_name != "o1-mini" and not reasoning_effort:
+            raise ValueError("Reasoning effort must be given for models starting with 'o', except 'o1-mini'")
+
 
     def get_completion(self, prompt, max_retries=3):
         """
