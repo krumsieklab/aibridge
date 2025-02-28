@@ -47,7 +47,7 @@ openai_models = {
         }
     },
     "o3-mini": {
-        "model_name": "o1-mini",
+        "model_name": "o3-mini",
         "cost_structure": {
             "cost_per_1M_tokens_input": 3,
             "cost_per_1M_tokens_output": 12
