@@ -149,3 +149,50 @@ def clean_json(json_string):
     cleaned_json_string = text_field_pattern.sub(process_text_content, fixed_json_string)
 
     return cleaned_json_string
+
+
+import json
+
+
+def fix_llm_json(raw_json_str: str) -> str:
+    """
+    1) Capture all double-quoted text with a robust pattern.
+    2) Double-escape backslashes and then escape newlines, tabs, etc.
+    3) Return a JSON-loadable string.
+    4) Raise an exception if validation fails (i.e. still invalid JSON).
+    """
+
+    # Pattern: "((?:\\.|[^"\\])*)"
+    # Meaning: match a double quote, then capture zero or more occurrences of either:
+    #          - an escaped char (e.g. \\, \")
+    #          - or any non-quote, non-backslash char
+    # until the next unescaped double quote.
+    pattern = r'"((?:\\.|[^"\\])*)"'
+
+    def fix_string_content(txt: str) -> str:
+        # Double-escape existing backslashes (so "\\"
+        # in original text becomes "\\\\" in final string)
+        txt = txt.replace('\\', '\\\\')
+
+        # Now escape real newlines, tabs, etc.
+        txt = txt.replace('\n', '\\n')
+        txt = txt.replace('\r', '\\r')
+        txt = txt.replace('\t', '\\t')
+        return txt
+
+    def replacement(match: re.Match) -> str:
+        content = match.group(1)  # text inside the quotes
+        fixed = fix_string_content(content)
+        return f"\"{fixed}\""
+
+    # Run the replacement
+    fixed_str = re.sub(pattern, replacement, raw_json_str, flags=re.DOTALL)
+
+    # Validate that the resulting text is indeed valid JSON
+    try:
+        json.loads(fixed_str)  # just to confirm we didn't break anything
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Still invalid JSON after fix: {exc}") from exc
+
+    # Return the corrected JSON as a string
+    return fixed_str

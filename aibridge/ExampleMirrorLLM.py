@@ -12,7 +12,7 @@ class ExampleMirrorLLM(LLM):
 
         # we're accessing the inner workings of aibridge, this is not sustainable
         prefix = llm_structured_helper.promptstr_pre_example
-        suffix = llm_structured_helper.promptstr_json_only
+        suffix = llm_structured_helper.promptstr_instructions
 
         # find what's exactly in between the prefix and suffix
         start = prompt.find(prefix)
