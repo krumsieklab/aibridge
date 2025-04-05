@@ -12,15 +12,15 @@ anthropic_models = {
             "cost_per_1M_tokens_output": 75.0
         }
     },
-    "claude-3.5-sonnet": {
-        "model_name": "claude-3-5-sonnet-20241022",
+    "claude-3.7-sonnet": {
+        "model_name": "claude-3-7-sonnet",
         "cost_structure": {
             "cost_per_1M_tokens_input": 3.0,
             "cost_per_1M_tokens_output": 15
         }
     },
     "claude-3.5-haiku": {
-        "model_name": "claude-3.5-haiku",
+        "model_name": "claude-3-5-haiku-20241022",
         "cost_structure": {
             "cost_per_1M_tokens_input": 0.8,
             "cost_per_1M_tokens_output": 4
