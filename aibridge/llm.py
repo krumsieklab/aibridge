@@ -27,6 +27,13 @@ class LLM(ABC):
         """
         pass
 
+    def get_completion_structured(self, prompt, structure):
+        """
+        Must be implemented by subclasses, throws NotImplementedError if not implemented.
+        """
+        raise NotImplementedError("Subclasses must implement this method.")
+
+
     def update_token_counters(self, input_tokens: int, output_tokens: int):
         # Update internal token counters
         self.token_counter_input += input_tokens
