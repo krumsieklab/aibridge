@@ -4,24 +4,52 @@ from openai import OpenAI
 
 from aibridge.llm import LLM
 openai_models = {
+    # --- legacy ---
     "gpt-3.5-turbo": {
         "model_name": "gpt-3.5-turbo",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 0.5,
-            "cost_per_1M_tokens_output": 1.5
+            "cost_per_1M_tokens_input": 0.50,
+            "cost_per_1M_tokens_output": 1.50
         }
     },
-    "gpt-4-turbo": {
-        "model_name": "gpt-4-turbo",
+
+    # --- GPT‑4.1 family ---
+    "gpt-4.1": {
+        "model_name": "gpt-4.1",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 10.00,
-            "cost_per_1M_tokens_output": 30.00
+            "cost_per_1M_tokens_input": 2.00,
+            "cost_per_1M_tokens_output": 8.00
         }
     },
+    "gpt-4.1-mini": {
+        "model_name": "gpt-4.1-mini",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 0.40,
+            "cost_per_1M_tokens_output": 1.60
+        }
+    },
+    "gpt-4.1-nano": {
+        "model_name": "gpt-4.1-nano",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 0.10,
+            "cost_per_1M_tokens_output": 0.40
+        }
+    },
+    
+    # --- GPT‑4.5 preview ---
+    "gpt-4.5-preview": {
+        "model_name": "gpt-4.5-preview",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 75.00,
+            "cost_per_1M_tokens_output": 150.00
+        }
+    },
+
+    # --- GPT‑4o family ---
     "gpt-4o": {
         "model_name": "gpt-4o",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 2.5,
+            "cost_per_1M_tokens_input": 2.50,
             "cost_per_1M_tokens_output": 10.00
         }
     },
@@ -32,28 +60,52 @@ openai_models = {
             "cost_per_1M_tokens_output": 0.60
         }
     },
+
+    # --- O‑series ---
     "o1": {
         "model_name": "o1",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 15,
-            "cost_per_1M_tokens_output": 60
+            "cost_per_1M_tokens_input": 15.00,
+            "cost_per_1M_tokens_output": 60.00
+        }
+    },
+    "o1-pro": {
+        "model_name": "o1-pro",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 150.00,
+            "cost_per_1M_tokens_output": 600.00
         }
     },
     "o1-mini": {
         "model_name": "o1-mini",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 3,
-            "cost_per_1M_tokens_output": 12
+            "cost_per_1M_tokens_input": 1.10,
+            "cost_per_1M_tokens_output": 4.40
+        }
+    },
+    "o3": {
+        "model_name": "o3",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 10.00,
+            "cost_per_1M_tokens_output": 40.00
         }
     },
     "o3-mini": {
         "model_name": "o3-mini",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 3,
-            "cost_per_1M_tokens_output": 12
+            "cost_per_1M_tokens_input": 1.10,
+            "cost_per_1M_tokens_output": 4.40
+        }
+    },
+    "o4-mini": {
+        "model_name": "o4-mini",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 1.10,
+            "cost_per_1M_tokens_output": 4.40
         }
     }
 }
+
 
 class OpenAIClient(LLM):
 
