@@ -10,7 +10,7 @@ class OllamaClientHTTP(LLM):
     """
 
     def __init__(self, model_name: str, url: str = "http://localhost:11434/api/generate", verbose: bool = False, ollama_args: dict = None,
-                 system_prompt: str = ""):
+                 system_prompt: str = "", max_retries: int = 3, wait_time: int = 1):
         """
         Initialize the OllamaClientHTTP with the URL of the server, the model name, and other parameters.
 
@@ -19,6 +19,9 @@ class OllamaClientHTTP(LLM):
             model_name (str): Name of the Ollama model, https://ollama.com/library
             verbose (bool, optional): If True, print additional information
             ollama_args (dict, optional): Additional arguments for the Ollama API call
+            system_prompt (str, optional): System prompt to prepend to all requests
+            max_retries (int, optional): Maximum number of retries in case of failure. Default is 3.
+            wait_time (int, optional): Time to wait between retries in seconds. Default is 1.
         """
         # Initialize superclass with no cost structure
         super().__init__()
@@ -29,19 +32,20 @@ class OllamaClientHTTP(LLM):
         self.ollama_args = ollama_args if ollama_args else {}
         self.ollama_args["model"] = model_name
         self.system_prompt = system_prompt
+        self.max_retries = max_retries
+        self.wait_time = wait_time
 
     @staticmethod
     def _remove_braille_characters(input_string):
         # Unicode range for Braille patterns: U+2800 to U+28FF
         return ''.join(char for char in input_string if not 0x2800 <= ord(char) <= 0x28FF)
 
-    def get_completion(self, prompt: str, max_retries: int = 3) -> str:
+    def get_completion(self, prompt: str) -> str:
         """
         Get a completion from the Ollama server.
 
         Args:
             prompt (str): The prompt to send to the Ollama server.
-            max_retries (int, optional): Maximum number of retries in case of failure. Default is 3.
 
         Returns:
             str: The completion text from the Ollama server.
@@ -54,7 +58,7 @@ class OllamaClientHTTP(LLM):
             prompt = self.system_prompt + "\n" + prompt
 
         # Retry loop
-        for i in range(max_retries):
+        for i in range(self.max_retries):
             try:
                 # Send a POST request to the server
                 response = requests.post(self.url, json={'prompt': prompt, 'model': self.model_name, 'stream': False, **self.ollama_args})
@@ -73,10 +77,10 @@ class OllamaClientHTTP(LLM):
                 if self.verbose:
                     print(f"Error: {str(e)}")
                     print("Retrying...")
-                time.sleep(1)
+                time.sleep(self.wait_time)
 
         # Raise exception after max retries
-        raise Exception(f"Failed to get response from Ollama server after {max_retries} retries")
+        raise Exception(f"Failed to get response from Ollama server after {self.max_retries} retries")
 
 
 

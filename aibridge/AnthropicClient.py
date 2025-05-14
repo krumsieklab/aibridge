@@ -35,7 +35,7 @@ class AnthropicClient(LLM):
     """
 
     def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, anthropic_args: dict = None,
-                 system_prompt: str = "You are a helpful AI assistant."):
+                 system_prompt: str = "You are a helpful AI assistant.", max_retries: int = 3, wait_time: int = 1):
         """
         Initialize the AnthropicClient with the API key, model name, optional cost structure, and Anthropic API arguments.
 
@@ -44,6 +44,9 @@ class AnthropicClient(LLM):
             model_name (str): The name of the Anthropic model to use.
             cost_structure (dict, optional): The cost structure of the model.
             anthropic_args (dict, optional): Additional arguments for the Anthropic API call.
+            system_prompt (str, optional): The system prompt to use. Defaults to "You are a helpful AI assistant."
+            max_retries (int, optional): Maximum number of retries in case of failure. Defaults to 3.
+            wait_time (int, optional): Time to wait between retries in seconds. Defaults to 1.
         """
         # Initialize superclass with cost structure
         super().__init__(cost_structure)
@@ -53,6 +56,9 @@ class AnthropicClient(LLM):
         self.anthropic_args["model"] = model_name
         # Store system prompt
         self.system_prompt = system_prompt
+        # Store retry settings
+        self.max_retries = max_retries
+        self.wait_time = wait_time
         # default settings for max_tokens, because it is required
         if "max_tokens" not in self.anthropic_args:
             self.anthropic_args["max_tokens"] = 1024
@@ -60,19 +66,18 @@ class AnthropicClient(LLM):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.call_timestamps = []  # Keep track of call timestamps for rate limiting
 
-    def get_completion(self, prompt, max_retries=3):
+    def get_completion(self, prompt):
         """
         Get a completion from the Anthropic API.
 
         Args:
             prompt (str): The prompt to send to the Anthropic API.
-            max_retries (int, optional): Maximum number of retries in case of failure. Default is 3.
 
         Returns:
             str: The completion text from the Anthropic API.
         """
         # Retry loop
-        for i in range(max_retries):
+        for i in range(self.max_retries):
             try:
                 # Check rate limit before proceeding
                 self._check_rate_limit()
@@ -101,10 +106,10 @@ class AnthropicClient(LLM):
             except Exception as e:
                 print("  Anthropic error: " + str(e))
                 print("  Retrying...")
-                time.sleep(1)
+                time.sleep(self.wait_time)
 
         # Raise exception after max retries
-        raise Exception("Failed to get response from Anthropic after " + str(max_retries) + " retries")
+        raise Exception("Failed to get response from Anthropic after " + str(self.max_retries) + " retries")
 
     def _check_rate_limit(self) -> None:
         """

@@ -17,7 +17,8 @@ class VertexAIClient(LLM):
         cost_structure: dict = None,
         system_prompt: str = "You are a helpful AI assistant.",
         vertexai_args: dict = None,
-        max_retries: int = 3
+        max_retries: int = 3,
+        retry_wait_time: int = 1
     ):
         """
         Initialize the VertexAIClient with the project ID, location, model name,
@@ -45,6 +46,8 @@ class VertexAIClient(LLM):
                 Defaults to None.
             max_retries (int, optional): Maximum number of retries in case of API call failure.
                                          Defaults to 3.
+            retry_wait_time (int, optional): Number of seconds to wait between retries.
+                                             Defaults to 1.
         """
         super().__init__(cost_structure)
 
@@ -55,6 +58,7 @@ class VertexAIClient(LLM):
         self.model_name = model_name
         self.system_prompt = system_prompt
         self.max_retries = max_retries
+        self.retry_wait_time = retry_wait_time
 
         # Merge or define default Vertex AI arguments
         self.vertexai_args = vertexai_args if vertexai_args else {}
@@ -79,24 +83,19 @@ class VertexAIClient(LLM):
         # Create a Vertex AI Generative Model instance
         self.model = generative_models.GenerativeModel(self.model_name)
 
-    def get_completion(self, prompt: str, max_retries: int = None) -> str:
+    def get_completion(self, prompt: str) -> str:
         """
         Get a completion (generated text) from the Vertex AI Generative Model.
 
         Args:
             prompt (str): The user prompt to send to Vertex AI.
-            max_retries (int, optional): Number of retries in case of transient errors.
-                                         Defaults to self.max_retries.
 
         Returns:
             str: The generated text from Vertex AI.
         """
-        if max_retries is None:
-            max_retries = self.max_retries
-
         final_prompt = f"{self.system_prompt}\n{prompt}" if self.system_prompt else prompt
 
-        for attempt in range(max_retries):
+        for attempt in range(self.max_retries):
             try:
                 if self.stream:
                     # In streaming mode, generate_content returns an iterator of GenerationResponse
@@ -130,8 +129,8 @@ class VertexAIClient(LLM):
             except Exception as e:
                 print(f"  Vertex AI error: {e}")
                 print("  Retrying...")
-                time.sleep(1)
+                time.sleep(self.retry_wait_time)
 
         raise Exception(
-            f"Failed to get response from Vertex AI after {max_retries} retries"
+            f"Failed to get response from Vertex AI after {self.max_retries} retries"
         )

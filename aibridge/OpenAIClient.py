@@ -111,7 +111,7 @@ class OpenAIClient(LLM):
 
     def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, openai_args: dict = None,
                  system_prompt: str = "You are a helpful AI assistant.", custom_url: str = None,
-                 reasoning_effort: str = None):
+                 reasoning_effort: str = None, max_retries: int = 3, wait_time: int = 1):
         """
         Initialize the OpenAIClient with the API key, model name, optional cost structure, and OpenAI API arguments.
 
@@ -120,6 +120,11 @@ class OpenAIClient(LLM):
             model_name (str): The name of the OpenAI model to use.
             cost_structure (dict, optional): The cost structure of the model.
             openai_args (dict, optional): Additional arguments for the OpenAI API call.
+            system_prompt (str, optional): The system prompt to use. Defaults to "You are a helpful AI assistant."
+            custom_url (str, optional): Custom URL for the OpenAI API.
+            reasoning_effort (str, optional): Reasoning effort level for O-series models.
+            max_retries (int, optional): Maximum number of retries for API calls. Defaults to 3.
+            wait_time (int, optional): Time to wait between retries in seconds. Defaults to 1.
 
         Example:
             openai_args = {
@@ -136,6 +141,9 @@ class OpenAIClient(LLM):
         self.openai_args["model"] = model_name
         # Store system prompt
         self.system_prompt = system_prompt
+        # Store retry settings
+        self.max_retries = max_retries
+        self.wait_time = wait_time
         # Initialize OpenAI client
         os.environ["OPENAI_API_KEY"] = api_key
         # initialize OpenAI client
@@ -143,8 +151,6 @@ class OpenAIClient(LLM):
             self.client = OpenAI(base_url=custom_url)
         else:
             self.client = OpenAI()
-
-
 
         # if reasoning effort is given, this must be a model starting with "o"
         if reasoning_effort and not model_name.startswith("o"):
@@ -159,20 +165,16 @@ class OpenAIClient(LLM):
         if model_name.startswith("o") and model_name != "o1-mini" and not reasoning_effort:
             raise ValueError("Reasoning effort must be given for models starting with 'o', except 'o1-mini'")
 
-
-    def get_completion(self, prompt, max_retries=3):
+    def get_completion(self, prompt):
         """
         Get a completion from the OpenAI API.
 
         Args:
             prompt (str): The prompt to send to the OpenAI API.
-            max_retries (int, optional): Maximum number of retries in case of failure. Default is 3.
 
         Returns:
             str: The completion text from the OpenAI API.
         """
-
-
         # build messages dict
         # if this is one of the "o1..." models, then we cannot give a system role
         if self.model_name.startswith("o1"):
@@ -184,7 +186,7 @@ class OpenAIClient(LLM):
             ]
 
         # Retry loop
-        for i in range(max_retries):
+        for i in range(self.max_retries):
             try:
                 # Run prompt with OpenAI API
                 response = self.client.chat.completions.create(
@@ -199,7 +201,7 @@ class OpenAIClient(LLM):
             except Exception as e:
                 print("  OpenAI error: " + str(e))
                 print("  Retrying...")
-                time.sleep(1)
+                time.sleep(self.wait_time)
 
         # Raise exception after max retries
-        raise Exception("Failed to get response from OpenAI after " + str(max_retries) + " retries")
+        raise Exception("Failed to get response from OpenAI after " + str(self.max_retries) + " retries")
