@@ -13,10 +13,10 @@ openai_models = {
         }
     },
 
-    # --- GPT‑4.1 family ---
+    # --- GPT-4.1 family ---
     "gpt-4.1": {
         "model_name": "gpt-4.1",
-        "cost_structure": {
+        "cost_structure": {          # unchanged
             "cost_per_1M_tokens_input": 2.00,
             "cost_per_1M_tokens_output": 8.00
         }
@@ -35,33 +35,33 @@ openai_models = {
             "cost_per_1M_tokens_output": 0.40
         }
     },
-    
-    # --- GPT‑4.5 preview ---
+
+    # --- GPT-4.5 preview ---
     "gpt-4.5-preview": {
         "model_name": "gpt-4.5-preview",
-        "cost_structure": {
+        "cost_structure": {          # still listed at this rate
             "cost_per_1M_tokens_input": 75.00,
             "cost_per_1M_tokens_output": 150.00
         }
     },
 
-    # --- GPT‑4o family ---
+    # --- GPT-4o family ---
     "gpt-4o": {
         "model_name": "gpt-4o",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 2.50,
-            "cost_per_1M_tokens_output": 10.00
+        "cost_structure": {          # price now $5 / $20
+            "cost_per_1M_tokens_input": 5.00,
+            "cost_per_1M_tokens_output": 20.00
         }
     },
     "gpt-4o-mini": {
         "model_name": "gpt-4o-mini",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 0.15,
-            "cost_per_1M_tokens_output": 0.60
+        "cost_structure": {          # price now $0.60 / $2.40
+            "cost_per_1M_tokens_input": 0.60,
+            "cost_per_1M_tokens_output": 2.40
         }
     },
 
-    # --- O‑series ---
+    # --- O-series ---
     "o1": {
         "model_name": "o1",
         "cost_structure": {
@@ -83,11 +83,20 @@ openai_models = {
             "cost_per_1M_tokens_output": 4.40
         }
     },
+
+    # --- O-3 family (new pricing & new model) ---
     "o3": {
         "model_name": "o3",
+        "cost_structure": {          # 80 % price cut
+            "cost_per_1M_tokens_input": 2.00,
+            "cost_per_1M_tokens_output": 8.00
+        }
+    },
+    "o3-pro": {                     # NEW
+        "model_name": "o3-pro",
         "cost_structure": {
-            "cost_per_1M_tokens_input": 10.00,
-            "cost_per_1M_tokens_output": 40.00
+            "cost_per_1M_tokens_input": 20.00,
+            "cost_per_1M_tokens_output": 80.00
         }
     },
     "o3-mini": {
@@ -97,6 +106,7 @@ openai_models = {
             "cost_per_1M_tokens_output": 4.40
         }
     },
+
     "o4-mini": {
         "model_name": "o4-mini",
         "cost_structure": {
@@ -164,6 +174,10 @@ class OpenAIClient(LLM):
         # if it is an "o" model EXCEPT "o1-mini", a reasoning effort MUST be given
         if model_name.startswith("o") and model_name != "o1-mini" and not reasoning_effort:
             raise ValueError("Reasoning effort must be given for models starting with 'o', except 'o1-mini'")
+        
+        # add the reasoning effort to the openai_args if it is given
+        if reasoning_effort:
+            self.openai_args["reasoning_effort"] = reasoning_effort
 
     def get_completion(self, prompt):
         """
@@ -205,3 +219,9 @@ class OpenAIClient(LLM):
 
         # Raise exception after max retries
         raise Exception("Failed to get response from OpenAI after " + str(self.max_retries) + " retries")
+
+    def identify(self):
+        if "reasoning_effort" in self.openai_args:
+            return f"{self.__class__.__name__}({self.model_name} || reasoning={self.openai_args['reasoning_effort']})"
+        else:
+            return f"{self.__class__.__name__}({self.model_name})"

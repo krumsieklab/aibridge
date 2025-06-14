@@ -5,29 +5,33 @@ from aibridge.llm import LLM
 
 # Dictionary of models with model name as key and cost structure as value (per million tokens)
 anthropic_models = {
-    "claude-3-opus": {
-        "model_name": "claude-3-opus",
-        "cost_structure": {
+    # Flagship – highest capability
+    "claude-4-opus": {
+        "model_name": "claude-opus-4-20250514",
+        "cost_structure": {           # prices are per-million tokens
             "cost_per_1M_tokens_input": 15.0,
             "cost_per_1M_tokens_output": 75.0
         }
     },
-    "claude-3.7-sonnet": {
-        "model_name": "claude-3-7-sonnet",
+
+    # Balanced performance / cost
+    "claude-4-sonnet": {
+        "model_name": "claude-sonnet-4-20250514",
         "cost_structure": {
             "cost_per_1M_tokens_input": 3.0,
-            "cost_per_1M_tokens_output": 15
+            "cost_per_1M_tokens_output": 15.0
         }
     },
+
+    # Fastest & most economical (no v4 Haiku announced yet)
     "claude-3.5-haiku": {
         "model_name": "claude-3-5-haiku-20241022",
         "cost_structure": {
             "cost_per_1M_tokens_input": 0.8,
-            "cost_per_1M_tokens_output": 4
+            "cost_per_1M_tokens_output": 4.0
         }
     }
 }
-
 
 class AnthropicClient(LLM):
     """
