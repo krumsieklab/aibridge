@@ -77,10 +77,9 @@ class GoogleGenAIClient(LLM):
         })
         
         # Extract thinking_config or use default
-        default_thinking_config = ThinkingConfig(thinking_budget=0) # Default value
         thinking_config_params = self.vertexai_args.get("thinking_config", {})
         self.thinking_config = ThinkingConfig(
-            thinking_budget=thinking_config_params.get("thinking_budget", default_thinking_config.thinking_budget)
+            thinking_budget=thinking_config_params.get("thinking_budget")
         )
 
         self.safety_settings = [
@@ -133,7 +132,7 @@ class GoogleGenAIClient(LLM):
                 # else:
                     # In non-streaming mode, generate_content returns a single GenerationResponse object
                 responses = self.client.models.generate_content(
-                    model="gemini-2.5-flash-preview-04-17", # Hardcoded for now since no other model is supports thinking_config
+                    model=self.model_name,
                     contents=[final_prompt],
                     config=GenerateContentConfig(
                         temperature=self.generation_config.get("temperature", 0.9),
