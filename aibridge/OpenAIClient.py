@@ -198,9 +198,16 @@ class OpenAIClient(LLM):
         # but specifically, it cannot be given for "o1-mini"
         if reasoning_effort and model_name == "o1-mini":
             raise ValueError("Reasoning effort is not supported for 'o1-mini'")
-        # if reasoning effort is given, it must be "low", "medium", or "high"
-        if reasoning_effort and reasoning_effort not in ["low", "medium", "high"]:
-            raise ValueError("Reasoning effort must be 'low', 'medium', or 'high'")
+        # if reasoning effort is given, validate based on model type
+        if reasoning_effort:
+            if model_name.startswith("gpt-5"):
+                # For GPT-5 models, allow "minimal" in addition to standard options
+                if reasoning_effort not in ["low", "medium", "high", "minimal"]:
+                    raise ValueError("Reasoning effort for GPT-5 models must be 'low', 'medium', 'high', or 'minimal'")
+            else:
+                # For O-series models, only allow standard options
+                if reasoning_effort not in ["low", "medium", "high"]:
+                    raise ValueError("Reasoning effort for O-series models must be 'low', 'medium', or 'high'")
         # if it is an "o" model EXCEPT "o1-mini", a reasoning effort MUST be given
         if model_name.startswith("o") and model_name != "o1-mini" and not reasoning_effort:
             raise ValueError("Reasoning effort must be given for models starting with 'o', except 'o1-mini'")
