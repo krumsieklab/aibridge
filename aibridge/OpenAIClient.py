@@ -16,7 +16,7 @@ openai_models = {
     # --- GPT-4.1 family ---
     "gpt-4.1": {
         "model_name": "gpt-4.1",
-        "cost_structure": {          # unchanged
+        "cost_structure": {
             "cost_per_1M_tokens_input": 2.00,
             "cost_per_1M_tokens_output": 8.00
         }
@@ -39,7 +39,7 @@ openai_models = {
     # --- GPT-4.5 preview ---
     "gpt-4.5-preview": {
         "model_name": "gpt-4.5-preview",
-        "cost_structure": {          # still listed at this rate
+        "cost_structure": {
             "cost_per_1M_tokens_input": 75.00,
             "cost_per_1M_tokens_output": 150.00
         }
@@ -48,14 +48,14 @@ openai_models = {
     # --- GPT-4o family ---
     "gpt-4o": {
         "model_name": "gpt-4o",
-        "cost_structure": {          # price now $5 / $20
+        "cost_structure": {
             "cost_per_1M_tokens_input": 5.00,
             "cost_per_1M_tokens_output": 20.00
         }
     },
     "gpt-4o-mini": {
         "model_name": "gpt-4o-mini",
-        "cost_structure": {          # price now $0.60 / $2.40
+        "cost_structure": {
             "cost_per_1M_tokens_input": 0.60,
             "cost_per_1M_tokens_output": 2.40
         }
@@ -84,15 +84,15 @@ openai_models = {
         }
     },
 
-    # --- O-3 family (new pricing & new model) ---
+    # --- O-3 family ---
     "o3": {
         "model_name": "o3",
-        "cost_structure": {          # 80 % price cut
+        "cost_structure": {
             "cost_per_1M_tokens_input": 2.00,
             "cost_per_1M_tokens_output": 8.00
         }
     },
-    "o3-pro": {                     # NEW
+    "o3-pro": {
         "model_name": "o3-pro",
         "cost_structure": {
             "cost_per_1M_tokens_input": 20.00,
@@ -113,6 +113,36 @@ openai_models = {
             "cost_per_1M_tokens_input": 1.10,
             "cost_per_1M_tokens_output": 4.40
         }
+    },
+
+    # --- GPT-5 family (verified pricing) ---
+    "gpt-5": {
+        "model_name": "gpt-5",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 1.25,
+            "cost_per_1M_tokens_output": 10.00
+        }
+    },
+    "gpt-5-mini": {
+        "model_name": "gpt-5-mini",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 0.25,
+            "cost_per_1M_tokens_output": 2.00
+        }
+    },
+    "gpt-5-nano": {
+        "model_name": "gpt-5-nano",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 0.05,
+            "cost_per_1M_tokens_output": 0.40
+        }
+    },
+    "gpt-5-chat-latest": {
+        "model_name": "gpt-5-chat-latest",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 1.25,
+            "cost_per_1M_tokens_output": 10.00
+        }  # matches base gpt-5 pricing
     }
 }
 
@@ -163,7 +193,7 @@ class OpenAIClient(LLM):
             self.client = OpenAI()
 
         # if reasoning effort is given, this must be a model starting with "o"
-        if reasoning_effort and not model_name.startswith("o"):
+        if reasoning_effort and not (model_name.startswith("o") or model_name.startswith("gpt-5")):
             raise ValueError("Reasoning effort is only supported for models starting with 'o'")
         # but specifically, it cannot be given for "o1-mini"
         if reasoning_effort and model_name == "o1-mini":
