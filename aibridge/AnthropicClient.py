@@ -46,7 +46,8 @@ class AnthropicClient(LLM):
     """
 
     def __init__(self, api_key: str, model_name: str, cost_structure: dict = None, anthropic_args: dict = None,
-                 system_prompt: str = "You are a helpful AI assistant.", max_retries: int = 3, wait_time: int = 1):
+                 system_prompt: str = "You are a helpful AI assistant.", thinking_budget: int = None,
+                 max_retries: int = 3, wait_time: int = 1):
         """
         Initialize the AnthropicClient with the API key, model name, optional cost structure, and Anthropic API arguments.
 
@@ -56,6 +57,7 @@ class AnthropicClient(LLM):
             cost_structure (dict, optional): The cost structure of the model.
             anthropic_args (dict, optional): Additional arguments for the Anthropic API call.
             system_prompt (str, optional): The system prompt to use. Defaults to "You are a helpful AI assistant."
+            thinking_budget (int, optional): Token budget for extended thinking. Minimum 1024 tokens.
             max_retries (int, optional): Maximum number of retries in case of failure. Defaults to 3.
             wait_time (int, optional): Time to wait between retries in seconds. Defaults to 1.
         """
@@ -72,7 +74,17 @@ class AnthropicClient(LLM):
         self.wait_time = wait_time
         # default settings for max_tokens, because it is required
         if "max_tokens" not in self.anthropic_args:
-            self.anthropic_args["max_tokens"] = 1024
+            self.anthropic_args["max_tokens"] = 2048
+        
+        # Validate and store thinking budget
+        if thinking_budget is not None:
+            if thinking_budget < 1024:
+                raise ValueError("thinking_budget must be at least 1024 tokens")
+            if thinking_budget >= self.anthropic_args["max_tokens"]:
+                raise ValueError("thinking_budget must be less than max_tokens")
+            self.thinking_budget = thinking_budget
+        else:
+            self.thinking_budget = None
         # Initialize Anthropic client
         self.client = anthropic.Anthropic(api_key=api_key)
         self.call_timestamps = []  # Keep track of call timestamps for rate limiting
@@ -93,13 +105,23 @@ class AnthropicClient(LLM):
                 # Check rate limit before proceeding
                 self._check_rate_limit()
 
+                # Prepare API arguments
+                api_args = self.anthropic_args.copy()
+                
+                # Add thinking configuration if specified
+                if self.thinking_budget is not None:
+                    api_args["thinking"] = {
+                        "type": "enabled",
+                        "budget_tokens": self.thinking_budget
+                    }
+                
                 # Call the API
                 response = self.client.messages.create(
                     system=self.system_prompt,
                     messages=[
                         {"role": "user", "content": prompt}
                     ],
-                    **self.anthropic_args
+                    **api_args
                 )
 
                 # Update internal token counters
@@ -144,3 +166,9 @@ class AnthropicClient(LLM):
 
         # Record the timestamp of this call
         self.call_timestamps.append(time.time())
+
+    def identify(self):
+        if self.thinking_budget is not None:
+            return f"{self.__class__.__name__}({self.model_name} || thinking_budget={self.thinking_budget})"
+        else:
+            return f"{self.__class__.__name__}({self.model_name})"
