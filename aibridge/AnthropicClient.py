@@ -6,8 +6,7 @@ from aibridge.llm import LLM
 # Dictionary of models with model name as key and cost structure as value (per million tokens)
 anthropic_models = {
     # Flagship – highest capability
-
-    "claude-4-opus": {
+    "claude-4.1-opus": {
         "model_name": "claude-opus-4.1",
         "cost_structure": {           # prices are per-million tokens
             "cost_per_1M_tokens_input": 15.0,
