@@ -21,6 +21,9 @@ class GoogleClient(LLM):
             max_retries (int, optional): Maximum number of retries in case of failure. Default is 3.
             wait_time (int, optional): Time to wait between retries in seconds. Default is 1.
         """
+
+        raise NotImplementedError("GoogleClient is obsolete. Use GoogleVertexGenAIClient or GoogleAIStudioClient instead.")
+
         # Initialize superclass with no cost structure
         super().__init__()
         # Store parameters

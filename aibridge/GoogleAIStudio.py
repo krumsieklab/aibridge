@@ -1,7 +1,8 @@
 import time
 from google import genai
 from google.genai import types
-from aibridge.llm import LLM  # Adjust import path as needed
+from aibridge.llm import LLM
+from aibridge.llm_commons import count_tokens
 from google.genai.types import ThinkingConfig
 from google.genai.types import (
     GenerateContentConfig,
@@ -10,30 +11,28 @@ from google.genai.types import (
     SafetySetting,
 )
 
-class GoogleGenAIClient(LLM):
+class GoogleAIStudioClient(LLM):
     """
-    GoogleGenAIClient class to interact with Google Cloud's Google Generative AI.
+    GoogleAIStudioClient class to interact with Google AI Studio using the genai SDK.
     """
 
     def __init__(
         self,
-        project: str,
-        location: str,
+        api_key: str,
         model_name: str,
         cost_structure: dict = None,
         system_prompt: str = "You are a helpful AI assistant.",
-        vertexai_args: dict = None,
+        generation_args: dict = None,
         max_retries: int = 3,
         retry_wait_time: int = 1
     ):
         """
-        Initialize the GoogleGenAIClient with the project ID, location, model name,
-        optional cost structure, and optional Vertex AI arguments.
+        Initialize the GoogleAIStudioClient with the API key, model name,
+        optional cost structure, and optional generation arguments.
 
         Args:
-            project (str): GCP project ID.
-            location (str): GCP region (e.g., "us-central1").
-            model_name (str): The name of the Vertex AI Generative Model (e.g., "gemini-1.0-pro-001").
+            api_key (str): Google AI Studio API key.
+            model_name (str): The name of the model (e.g., "gemini-2.0-flash-exp", "gemini-3-pro-preview").
             cost_structure (dict, optional): The cost structure of the model. Must contain:
                 {
                   "cost_per_1M_tokens_input": float,
@@ -42,12 +41,11 @@ class GoogleGenAIClient(LLM):
                 Defaults to None.
             system_prompt (str, optional): A system-level prompt to prepend to user prompts.
                                            Defaults to a simple helper message.
-            vertexai_args (dict, optional): Additional arguments for Vertex AI generation.
+            generation_args (dict, optional): Additional arguments for generation.
                                             For example:
                 {
                     "generation_config": {...},
                     "safety_settings": {...},
-                    "stream": True/False,
                     "thinking_config": {...}
                 }
                 Defaults to None.
@@ -58,26 +56,25 @@ class GoogleGenAIClient(LLM):
         """
         super().__init__(cost_structure)
 
-        # Initialize Vertex AI
-        self.client = genai.Client(
-            vertexai=True, project=project, location=location,
-        )
+        # Initialize Google AI Studio client
+        self.client = genai.Client(api_key=api_key)
+        
         # Save parameters
         self.model_name = model_name
         self.system_prompt = system_prompt
         self.max_retries = max_retries
         self.retry_wait_time = retry_wait_time
 
-        # Merge or define default Vertex AI arguments
-        self.vertexai_args = vertexai_args if vertexai_args else {}
-        self.generation_config = self.vertexai_args.get("generation_config",{
+        # Merge or define default generation arguments
+        self.generation_args = generation_args if generation_args else {}
+        self.generation_config = self.generation_args.get("generation_config",{
             "max_output_tokens": 8000,
             "temperature": 0.9,
             "top_p": 0.95,
         })
         
         # Extract thinking_config or use default
-        thinking_config_params = self.vertexai_args.get("thinking_config", {})
+        thinking_config_params = self.generation_args.get("thinking_config", {})
         self.thinking_config = ThinkingConfig(
             thinking_budget=thinking_config_params.get("thinking_budget")
         )
@@ -103,37 +100,22 @@ class GoogleGenAIClient(LLM):
 
     def get_completion(self, prompt: str) -> str:
         """
-        Get a completion (generated text) from the Vertex AI Generative Model.
+        Get a completion (generated text) from Google AI Studio.
 
         Args:
-            prompt (str): The user prompt to send to Vertex AI.
+            prompt (str): The user prompt to send to Google AI Studio.
 
         Returns:
-            str: The generated text from Vertex AI.
+            str: The generated text from Google AI Studio.
         """
         final_prompt = f"{self.system_prompt}\n{prompt}" if self.system_prompt else prompt
 
         for attempt in range(self.max_retries):
             try:
-                # if self.stream:
-                #     # In streaming mode, generate_content returns an iterator of GenerationResponse
-                #     responses = self.client.models.generate_content(
-                #         model=self.model,
-                #         content=[final_prompt],
-                #         config=GenerateContentConfig(
-                #             generation_config=self.generation_config,
-                #             safety_settings=self.safety_settings,
-                #         )
-                #     )
-                #     total_text = ""
-                #     for response in responses:
-                #         if hasattr(response, "text"):
-                #             total_text += response.text
-                # else:
-                    # In non-streaming mode, generate_content returns a single GenerationResponse object
-                responses = self.client.models.generate_content(
+                # Generate content using Google AI Studio
+                response = self.client.models.generate_content(
                     model=self.model_name,
-                    contents=[final_prompt],
+                    contents=final_prompt,
                     config=GenerateContentConfig(
                         temperature=self.generation_config.get("temperature", 0.9),
                         top_p=self.generation_config.get("top_p", 0.95),
@@ -141,20 +123,26 @@ class GoogleGenAIClient(LLM):
                         thinking_config=self.thinking_config
                     )
                 )
-                total_text = responses.text if hasattr(responses, "text") else ""
+                total_text = response.text if hasattr(response, "text") else ""
 
-                # Update internal token counters (approximation)
-                input_tokens = len(final_prompt.split())
-                output_tokens = len(total_text.split())
+                # Update internal token counters from response metadata
+                if hasattr(response, "usage_metadata"):
+                    input_tokens = response.usage_metadata.prompt_token_count
+                    output_tokens = response.usage_metadata.candidates_token_count
+                else:
+                    # Fallback to tiktoken approximation if metadata not available
+                    input_tokens = count_tokens(final_prompt)
+                    output_tokens = count_tokens(total_text)
                 self.update_token_counters(input_tokens, output_tokens)
 
                 return total_text.strip()
 
             except Exception as e:
-                print(f"  Vertex AI error: {e}")
+                print(f"  Google AI Studio error: {e}")
                 print("  Retrying...")
                 time.sleep(self.retry_wait_time)
 
         raise Exception(
-            f"Failed to get response from Vertex AI after {self.max_retries} retries"
+            f"Failed to get response from Google AI Studio after {self.max_retries} retries"
         )
+
