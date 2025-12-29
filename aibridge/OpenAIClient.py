@@ -4,147 +4,159 @@ from openai import OpenAI
 
 from aibridge.llm import LLM
 openai_models = {
-    # --- legacy ---
-    "gpt-3.5-turbo": {
-        "model_name": "gpt-3.5-turbo",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 0.50,
-            "cost_per_1M_tokens_output": 1.50
-        }
+    # --- GPT-5 family (Standard tier) ---
+    "gpt-5.2": {
+        "model_name": "gpt-5.2",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.75, "cost_per_1M_tokens_output": 14.00},
+    },
+    "gpt-5.2-chat-latest": {
+        "model_name": "gpt-5.2-chat-latest",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.75, "cost_per_1M_tokens_output": 14.00},
+    },
+    "gpt-5.2-pro": {
+        "model_name": "gpt-5.2-pro",
+        "cost_structure": {"cost_per_1M_tokens_input": 21.00, "cost_per_1M_tokens_output": 168.00},
+    },
+    "gpt-5.1": {
+        "model_name": "gpt-5.1",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+    },
+    "gpt-5.1-chat-latest": {
+        "model_name": "gpt-5.1-chat-latest",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+    },
+    "gpt-5": {
+        "model_name": "gpt-5",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+    },
+    "gpt-5-chat-latest": {
+        "model_name": "gpt-5-chat-latest",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+    },
+    "gpt-5-pro": {
+        "model_name": "gpt-5-pro",
+        "cost_structure": {"cost_per_1M_tokens_input": 15.00, "cost_per_1M_tokens_output": 120.00},
+    },
+    "gpt-5-mini": {
+        "model_name": "gpt-5-mini",
+        "cost_structure": {"cost_per_1M_tokens_input": 0.25, "cost_per_1M_tokens_output": 2.00},
+    },
+    "gpt-5-nano": {
+        "model_name": "gpt-5-nano",
+        "cost_structure": {"cost_per_1M_tokens_input": 0.05, "cost_per_1M_tokens_output": 0.40},
     },
 
-    # --- GPT-4.1 family ---
+    # --- Codex models (Standard tier) ---
+    "gpt-5.1-codex-max": {
+        "model_name": "gpt-5.1-codex-max",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+    },
+    "gpt-5.1-codex": {
+        "model_name": "gpt-5.1-codex",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+    },
+    "gpt-5-codex": {
+        "model_name": "gpt-5-codex",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+    },
+    "gpt-5.1-codex-mini": {
+        "model_name": "gpt-5.1-codex-mini",
+        "cost_structure": {"cost_per_1M_tokens_input": 0.25, "cost_per_1M_tokens_output": 2.00},
+    },
+    "codex-mini-latest": {
+        "model_name": "codex-mini-latest",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.50, "cost_per_1M_tokens_output": 6.00},
+    },
+
+    # --- GPT-4.1 family (Standard tier) ---
     "gpt-4.1": {
         "model_name": "gpt-4.1",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 2.00,
-            "cost_per_1M_tokens_output": 8.00
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 2.00, "cost_per_1M_tokens_output": 8.00},
     },
     "gpt-4.1-mini": {
         "model_name": "gpt-4.1-mini",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 0.40,
-            "cost_per_1M_tokens_output": 1.60
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 0.40, "cost_per_1M_tokens_output": 1.60},
     },
     "gpt-4.1-nano": {
         "model_name": "gpt-4.1-nano",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 0.10,
-            "cost_per_1M_tokens_output": 0.40
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 0.10, "cost_per_1M_tokens_output": 0.40},
     },
 
-    # --- GPT-4.5 preview ---
-    "gpt-4.5-preview": {
-        "model_name": "gpt-4.5-preview",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 75.00,
-            "cost_per_1M_tokens_output": 150.00
-        }
-    },
-
-    # --- GPT-4o family ---
+    # --- GPT-4o family (Standard tier) ---
     "gpt-4o": {
         "model_name": "gpt-4o",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 5.00,
-            "cost_per_1M_tokens_output": 20.00
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 2.50, "cost_per_1M_tokens_output": 10.00},
     },
     "gpt-4o-mini": {
         "model_name": "gpt-4o-mini",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 0.60,
-            "cost_per_1M_tokens_output": 2.40
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 0.15, "cost_per_1M_tokens_output": 0.60},
+    },
+    "gpt-4o-2024-05-13": {
+        "model_name": "gpt-4o-2024-05-13",
+        "cost_structure": {"cost_per_1M_tokens_input": 5.00, "cost_per_1M_tokens_output": 15.00},
     },
 
-    # --- O-series ---
+    # --- O-series reasoning models (Standard tier) ---
     "o1": {
         "model_name": "o1",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 15.00,
-            "cost_per_1M_tokens_output": 60.00
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 15.00, "cost_per_1M_tokens_output": 60.00},
     },
     "o1-pro": {
         "model_name": "o1-pro",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 150.00,
-            "cost_per_1M_tokens_output": 600.00
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 150.00, "cost_per_1M_tokens_output": 600.00},
     },
     "o1-mini": {
         "model_name": "o1-mini",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 1.10,
-            "cost_per_1M_tokens_output": 4.40
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 1.10, "cost_per_1M_tokens_output": 4.40},
     },
 
-    # --- O-3 family ---
     "o3": {
         "model_name": "o3",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 2.00,
-            "cost_per_1M_tokens_output": 8.00
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 2.00, "cost_per_1M_tokens_output": 8.00},
     },
     "o3-pro": {
         "model_name": "o3-pro",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 20.00,
-            "cost_per_1M_tokens_output": 80.00
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 20.00, "cost_per_1M_tokens_output": 80.00},
     },
     "o3-mini": {
         "model_name": "o3-mini",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 1.10,
-            "cost_per_1M_tokens_output": 4.40
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 1.10, "cost_per_1M_tokens_output": 4.40},
     },
 
     "o4-mini": {
         "model_name": "o4-mini",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 1.10,
-            "cost_per_1M_tokens_output": 4.40
-        }
+        "cost_structure": {"cost_per_1M_tokens_input": 1.10, "cost_per_1M_tokens_output": 4.40},
     },
 
-    # --- GPT-5 family (verified pricing) ---
-    "gpt-5": {
-        "model_name": "gpt-5",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 1.25,
-            "cost_per_1M_tokens_output": 10.00
-        }
+    # --- Deep research variants (Standard tier) ---
+    "o3-deep-research": {
+        "model_name": "o3-deep-research",
+        "cost_structure": {"cost_per_1M_tokens_input": 10.00, "cost_per_1M_tokens_output": 40.00},
     },
-    "gpt-5-mini": {
-        "model_name": "gpt-5-mini",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 0.25,
-            "cost_per_1M_tokens_output": 2.00
-        }
+    "o4-mini-deep-research": {
+        "model_name": "o4-mini-deep-research",
+        "cost_structure": {"cost_per_1M_tokens_input": 2.00, "cost_per_1M_tokens_output": 8.00},
     },
-    "gpt-5-nano": {
-        "model_name": "gpt-5-nano",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 0.05,
-            "cost_per_1M_tokens_output": 0.40
-        }
+
+    # --- Tool-specialized model (Standard tier token rates) ---
+    "computer-use-preview": {
+        "model_name": "computer-use-preview",
+        "cost_structure": {"cost_per_1M_tokens_input": 3.00, "cost_per_1M_tokens_output": 12.00},
     },
-    "gpt-5-chat-latest": {
-        "model_name": "gpt-5-chat-latest",
-        "cost_structure": {
-            "cost_per_1M_tokens_input": 1.25,
-            "cost_per_1M_tokens_output": 10.00
-        }  # matches base gpt-5 pricing
-    }
+
+    # --- Legacy ---
+    "gpt-3.5-turbo": {
+        "model_name": "gpt-3.5-turbo",
+        "cost_structure": {"cost_per_1M_tokens_input": 0.50, "cost_per_1M_tokens_output": 1.50},
+    },
+
+    # --- Deprecated (kept for completeness) ---
+    "gpt-4.5-preview": {
+        "model_name": "gpt-4.5-preview",
+        "cost_structure": {"cost_per_1M_tokens_input": 75.00, "cost_per_1M_tokens_output": 150.00},
+    },
 }
+
 
 
 class OpenAIClient(LLM):
