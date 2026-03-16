@@ -4,27 +4,47 @@ from openai import OpenAI
 
 from aibridge.llm import LLM
 openai_models = {
-    # --- GPT-5 family (Standard tier) ---
+    # --- GPT-5.4 family (Standard tier, March 2026) ---
+    "gpt-5.4": {
+        "model_name": "gpt-5.4",
+        "cost_structure": {"cost_per_1M_tokens_input": 2.50, "cost_per_1M_tokens_output": 15.00},
+    },
+    "gpt-5.4-pro": {
+        "model_name": "gpt-5.4-pro",
+        "cost_structure": {"cost_per_1M_tokens_input": 30.00, "cost_per_1M_tokens_output": 180.00},
+    },
+
+    # --- GPT-5.3 family (Standard tier, Feb-Mar 2026) ---
+    "gpt-5.3-chat-latest": {
+        "model_name": "gpt-5.3-chat-latest",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.75, "cost_per_1M_tokens_output": 14.00},
+    },
+
+    # --- GPT-5.2 family (Standard tier) ---
     "gpt-5.2": {
         "model_name": "gpt-5.2",
         "cost_structure": {"cost_per_1M_tokens_input": 1.75, "cost_per_1M_tokens_output": 14.00},
     },
     "gpt-5.2-chat-latest": {
         "model_name": "gpt-5.2-chat-latest",
-        "cost_structure": {"cost_per_1M_tokens_input": 1.75, "cost_per_1M_tokens_output": 14.00},
+        "cost_structure": {"cost_per_1M_tokens_input": 0.88, "cost_per_1M_tokens_output": 7.00},
     },
     "gpt-5.2-pro": {
         "model_name": "gpt-5.2-pro",
-        "cost_structure": {"cost_per_1M_tokens_input": 21.00, "cost_per_1M_tokens_output": 168.00},
+        "cost_structure": {"cost_per_1M_tokens_input": 10.50, "cost_per_1M_tokens_output": 84.00},
     },
+
+    # --- GPT-5.1 family (Standard tier) ---
     "gpt-5.1": {
         "model_name": "gpt-5.1",
         "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
     },
     "gpt-5.1-chat-latest": {
         "model_name": "gpt-5.1-chat-latest",
-        "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
+        "cost_structure": {"cost_per_1M_tokens_input": 0.63, "cost_per_1M_tokens_output": 5.00},
     },
+
+    # --- GPT-5 family (Standard tier) ---
     "gpt-5": {
         "model_name": "gpt-5",
         "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
@@ -47,6 +67,14 @@ openai_models = {
     },
 
     # --- Codex models (Standard tier) ---
+    "gpt-5.3-codex": {
+        "model_name": "gpt-5.3-codex",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.75, "cost_per_1M_tokens_output": 14.00},
+    },
+    "gpt-5.2-codex": {
+        "model_name": "gpt-5.2-codex",
+        "cost_structure": {"cost_per_1M_tokens_input": 1.75, "cost_per_1M_tokens_output": 14.00},
+    },
     "gpt-5.1-codex-max": {
         "model_name": "gpt-5.1-codex-max",
         "cost_structure": {"cost_per_1M_tokens_input": 1.25, "cost_per_1M_tokens_output": 10.00},
@@ -65,7 +93,7 @@ openai_models = {
     },
     "codex-mini-latest": {
         "model_name": "codex-mini-latest",
-        "cost_structure": {"cost_per_1M_tokens_input": 1.50, "cost_per_1M_tokens_output": 6.00},
+        "cost_structure": {"cost_per_1M_tokens_input": 0.75, "cost_per_1M_tokens_output": 3.00},
     },
 
     # --- GPT-4.1 family (Standard tier) ---
@@ -226,7 +254,9 @@ class OpenAIClient(LLM):
         # if model_name.startswith("o") and model_name != "o1-mini" and not reasoning_effort:
         #     raise ValueError("Reasoning effort must be given for models starting with 'o', except 'o1-mini'")
         
-        # add the reasoning effort to the openai_args if it is given
+        # OpenAI charges cached input tokens at 50% of the regular input rate
+        self._cached_input_cost_multiplier = 0.5
+
         if reasoning_effort:
             self.openai_args["reasoning_effort"] = reasoning_effort
 
@@ -257,8 +287,21 @@ class OpenAIClient(LLM):
                 response = self.client.chat.completions.create(
                     messages=messages, **self.openai_args
                 )
-                # Update internal token counters
-                self.update_token_counters(response.usage.prompt_tokens, response.usage.completion_tokens)
+                # Extract thinking and cached token breakdowns
+                usage = response.usage
+                reasoning_tokens = 0
+                cached_tokens = 0
+                details = getattr(usage, 'completion_tokens_details', None)
+                if details is not None:
+                    reasoning_tokens = getattr(details, 'reasoning_tokens', 0) or 0
+                prompt_details = getattr(usage, 'prompt_tokens_details', None)
+                if prompt_details is not None:
+                    cached_tokens = getattr(prompt_details, 'cached_tokens', 0) or 0
+                self.update_token_counters(
+                    usage.prompt_tokens, usage.completion_tokens,
+                    thinking_tokens=reasoning_tokens,
+                    cached_input_tokens=cached_tokens,
+                )
                 # Extract and return message text
                 text = response.choices[0].message.content
                 return text
