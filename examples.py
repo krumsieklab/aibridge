@@ -89,10 +89,11 @@ llm = OpenAIClient(api_key=novita_key, **params)
 print(llm.get_completion("What is your model name?"))
 
 
-#%% Google Client
+#%% Google Client (Old API)
 
 # Setup is a bit more elaborate, since we have to communicate through the Google Cloud API
 # It'll require prior authentication and setup of the Google Cloud SDK via 'gcloud auth ...'
+# Note: This is the older API and may be deprecated. Use GoogleVertexGenAI for newer models.
 
 # Create an instance of GoogleClient
 from aibridge.GoogleClient import GoogleClient
@@ -111,6 +112,50 @@ llm = GoogleClient(
 )
 
 print(llm.get_completion("Who are you?"))
+
+
+#%% Google Vertex AI (genai SDK)
+
+# Use Google's Vertex AI with the modern genai SDK
+# Requires prior authentication via 'gcloud auth application-default login'
+
+from aibridge.GoogleVertexGenAI import GoogleVertexGenAIClient
+
+google_key = "..."  # Not needed for Vertex AI, uses gcloud auth
+
+llm = GoogleVertexGenAIClient(
+    project="your-gcp-project-id",
+    location="us-central1",
+    model_name="gemini-1.5-pro",
+    cost_structure={
+        "cost_per_1M_tokens_input": 1.25,
+        "cost_per_1M_tokens_output": 5.0
+    },
+    suppress_warnings=True
+)
+
+print(llm.get_completion("Explain how AI works in a few words"))
+
+
+#%% Google AI Studio (genai SDK)
+
+# Use Google AI Studio with the modern genai SDK
+# Requires an API key from aistudio.google.com
+
+from aibridge.GoogleAIStudio import GoogleAIStudioClient
+
+google_api_key = "..."  # Get from aistudio.google.com
+
+llm = GoogleAIStudioClient(
+    api_key=google_api_key,
+    model_name="gemini-2.0-flash-exp",
+    cost_structure={
+        "cost_per_1M_tokens_input": 0.0,  # Free tier
+        "cost_per_1M_tokens_output": 0.0
+    }
+)
+
+print(llm.get_completion("Explain how AI works in a few words"))
 
 
 
