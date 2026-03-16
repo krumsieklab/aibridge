@@ -20,17 +20,27 @@ load_dotenv()
 
 SYSTEM_PROMPT_DEFAULT = "You are a helpful AI assistant."
 
-
 # ---------------------------------------------------------------------------
-# Hard-coded pricing table (USD) – refreshed 21 Aug 2025
+# Hard-coded pricing table (USD) – refreshed 16 Jan 2026
 # ---------------------------------------------------------------------------
-# All token prices are **per 1 000 tokens** (convert from OpenAI per‑1M tables).
-# Web-search prices are **per individual tool call** (OpenAI built‑in Web Search).
+# All token prices are **per 1 000 tokens** (convert from OpenAI per-1M tables).
+#
+# Web search pricing notes (Responses API tools):
+#   • `web_search` (all models): $10 / 1k calls + search content tokens billed at the model's input rate.
+#   • `web_search_preview`:
+#       - reasoning models: $10 / 1k calls + search content tokens billed at the model's input rate.
+#       - non-reasoning models: $25 / 1k calls + search content tokens are free.
+#   • Special case: for `gpt-4o-mini` and `gpt-4.1-mini` with the non-preview `web_search` tool,
+#     search content tokens are charged as a fixed 8,000 input tokens per call.
+#
 # Notes:
-#   • For gpt‑4o & gpt‑4.1 families, Web Search "search content" tokens are INCLUDED in the
-#     per‑call fee. For GPT‑5 and o‑series, those tokens are billed at the model’s token rates.
-#   • "cached_input_per_1k" is omitted to preserve your original structure; add if you need it.
-from typing import Dict, Set, TypedDict, Optional
+#   • This table’s `search_per_call` values assume:
+#       - reasoning models → $0.0100/call, content tokens billed at model rate
+#       - non-reasoning models → $0.0250/call, content tokens included/free (preview)
+#   • Some models/tools combinations are not supported (e.g., web search is not supported on `gpt-4.1-nano`).
+#   • "cached_input_per_1k" is still omitted to preserve your original structure; add if you need it.
+
+from typing import Dict, Set, TypedDict
 
 class SearchPricing(TypedDict):
     per_call: float                 # USD per tool call
@@ -42,105 +52,239 @@ class ModelPrice(TypedDict, total=False):
     search_per_call: SearchPricing  # Web-search pricing for this model
 
 MODEL_PRICING: Dict[str, ModelPrice] = {
-    # ── GPT‑5 family (reasoning-capable) ───────────────────────────────────
-    "gpt-5": {
+    # ── GPT-5.2 family ─────────────────────────────────────────────────────
+    "gpt-5.2": {
+        "input_per_1k": 0.00175,    # $1.75 / 1M
+        "output_per_1k": 0.01400,   # $14.00 / 1M
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "gpt-5.2-chat-latest": {
+        "input_per_1k": 0.00175,
+        "output_per_1k": 0.01400,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "gpt-5.2-pro": {
+        "input_per_1k": 0.02100,    # $21.00 / 1M
+        "output_per_1k": 0.16800,   # $168.00 / 1M
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+
+    # ── GPT-5.1 family ─────────────────────────────────────────────────────
+    "gpt-5.1": {
         "input_per_1k": 0.00125,    # $1.25 / 1M
         "output_per_1k": 0.01000,   # $10.00 / 1M
         "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
+    "gpt-5.1-chat-latest": {
+        "input_per_1k": 0.00125,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+
+    # ── GPT-5 family ───────────────────────────────────────────────────────
+    "gpt-5": {
+        "input_per_1k": 0.00125,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "gpt-5-chat-latest": {
+        "input_per_1k": 0.00125,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "gpt-5-pro": {
+        "input_per_1k": 0.01500,
+        "output_per_1k": 0.12000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
     "gpt-5-mini": {
-        "input_per_1k": 0.00025,    # $0.25 / 1M
-        "output_per_1k": 0.00200,   # $2.00 / 1M
+        "input_per_1k": 0.00025,
+        "output_per_1k": 0.00200,
         "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
     "gpt-5-nano": {
-        "input_per_1k": 0.00005,    # $0.05 / 1M
-        "output_per_1k": 0.00040,   # $0.40 / 1M
+        "input_per_1k": 0.00005,
+        "output_per_1k": 0.00040,
         "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
 
-    # ── GPT‑4o family ──────────────────────────────────────────────────────
-    "gpt-4o": {
-        "input_per_1k": 0.00250,    # $2.50 / 1M
-        "output_per_1k": 0.01000,   # $10.00 / 1M
-        "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
+    # ── Codex models ───────────────────────────────────────────────────────
+    "gpt-5.2-codex": {
+        "input_per_1k": 0.00175,
+        "output_per_1k": 0.01400,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
-    "gpt-4o-mini": {
-        # See note below about 4o‑mini; most OpenAI docs show these lower prices for text.
-        "input_per_1k": 0.00015,    # $0.15 / 1M
-        "output_per_1k": 0.00060,   # $0.60 / 1M
-        "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
+    "gpt-5.1-codex-max": {
+        "input_per_1k": 0.00125,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "gpt-5.1-codex": {
+        "input_per_1k": 0.00125,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "gpt-5-codex": {
+        "input_per_1k": 0.00125,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "gpt-5.1-codex-mini": {
+        "input_per_1k": 0.00025,
+        "output_per_1k": 0.00200,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "codex-mini-latest": {
+        "input_per_1k": 0.00150,
+        "output_per_1k": 0.00600,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
 
-    # ── GPT‑4.1 family ─────────────────────────────────────────────────────
+    # ── GPT-4.1 family ─────────────────────────────────────────────────────
     "gpt-4.1": {
-        "input_per_1k": 0.00200,    # $2.00 / 1M
-        "output_per_1k": 0.00800,   # $8.00 / 1M
+        "input_per_1k": 0.00200,
+        "output_per_1k": 0.00800,
         "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
     },
     "gpt-4.1-mini": {
-        "input_per_1k": 0.00040,    # $0.40 / 1M
-        "output_per_1k": 0.00160,   # $1.60 / 1M
+        "input_per_1k": 0.00040,
+        "output_per_1k": 0.00160,
         "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
     },
     "gpt-4.1-nano": {
-        "input_per_1k": 0.00010,    # $0.10 / 1M
-        "output_per_1k": 0.00040,   # $0.40 / 1M
+        "input_per_1k": 0.00010,
+        "output_per_1k": 0.00040,
+        # web search not supported → omit `search_per_call`
+    },
+
+    # ── GPT-4o family ──────────────────────────────────────────────────────
+    "gpt-4o": {
+        "input_per_1k": 0.00250,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
+    },
+    "gpt-4o-mini": {
+        "input_per_1k": 0.00015,
+        "output_per_1k": 0.00060,
+        "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
+    },
+    "gpt-4o-2024-05-13": {
+        "input_per_1k": 0.00500,
+        "output_per_1k": 0.01500,
         "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
     },
 
-    # ── OpenAI “o” reasoning models ────────────────────────────────────────
-    "o4-mini": {
-        "input_per_1k": 0.00110,    # $1.10 / 1M
-        "output_per_1k": 0.00440,   # $4.40 / 1M
-        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    # ── Search-preview specialized models (Chat Completions) ────────────────
+    "gpt-4o-search-preview": {
+        "input_per_1k": 0.00250,
+        "output_per_1k": 0.01000,
+        "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
     },
-    "o3": {
-        "input_per_1k": 0.00200,    # $2.00 / 1M
-        "output_per_1k": 0.00800,   # $8.00 / 1M
-        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    "gpt-4o-mini-search-preview": {
+        "input_per_1k": 0.00015,
+        "output_per_1k": 0.00060,
+        "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
     },
-    "o3-mini": {
-        "input_per_1k": 0.00110,    # $1.10 / 1M
-        "output_per_1k": 0.00440,   # $4.40 / 1M
-        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
-    },
-    # Optional pro tier (more compute / higher quality)
-    "o3-pro": {  # available in API; priced via model token rates + same search tier
-        "input_per_1k": 0.02000,    # $20.00 / 1M  (placeholder: see API calculator if needed)
-        "output_per_1k": 0.08000,   # $80.00 / 1M  (placeholder)
+
+    # ── Search API model ────────────────────────────────────────────────────
+    "gpt-5-search-api": {
+        "input_per_1k": 0.00125,
+        "output_per_1k": 0.01000,
         "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
 
+    # ── OpenAI "o" reasoning models ────────────────────────────────────────
     "o1": {
-        "input_per_1k": 0.01500,    # $15.00 / 1M
-        "output_per_1k": 0.06000,   # $60.00 / 1M
-        # Web Search not listed for o1 in current pricing tables.
-        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
-    },
-    "o1-mini": {
-        "input_per_1k": 0.00110,    # $1.10 / 1M
-        "output_per_1k": 0.00440,   # $4.40 / 1M
+        "input_per_1k": 0.01500,
+        "output_per_1k": 0.06000,
         "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
     "o1-pro": {
-        "input_per_1k": 0.15000,    # $150.00 / 1M
-        "output_per_1k": 0.60000,   # $600.00 / 1M
-        # Web Search support not highlighted; treat like o‑series if enabled.
+        "input_per_1k": 0.15000,
+        "output_per_1k": 0.60000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "o1-mini": {
+        "input_per_1k": 0.00110,
+        "output_per_1k": 0.00440,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "o3": {
+        "input_per_1k": 0.00200,
+        "output_per_1k": 0.00800,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "o3-pro": {
+        "input_per_1k": 0.02000,
+        "output_per_1k": 0.08000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "o3-mini": {
+        "input_per_1k": 0.00110,
+        "output_per_1k": 0.00440,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "o4-mini": {
+        "input_per_1k": 0.00110,
+        "output_per_1k": 0.00440,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+
+    # ── Deep research variants ─────────────────────────────────────────────
+    "o3-deep-research": {
+        "input_per_1k": 0.01000,
+        "output_per_1k": 0.04000,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+    "o4-mini-deep-research": {
+        "input_per_1k": 0.00200,
+        "output_per_1k": 0.00800,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+
+    # ── Tool-specialized model ─────────────────────────────────────────────
+    "computer-use-preview": {
+        "input_per_1k": 0.00300,
+        "output_per_1k": 0.01200,
+        "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
+    },
+
+    # ── Legacy ─────────────────────────────────────────────────────────────
+    "gpt-3.5-turbo": {
+        "input_per_1k": 0.00050,
+        "output_per_1k": 0.00150,
+        "search_per_call": {"per_call": 0.0250, "content_tokens": "included"},
+    },
+
+    # ── Deprecated ─────────────────────────────────────────────────────────
+    "gpt-4.5-preview": {
+        "input_per_1k": 0.07500,
+        "output_per_1k": 0.15000,
         "search_per_call": {"per_call": 0.0100, "content_tokens": "billed_at_model_rate"},
     },
 }
 
-# Reasoning-capable models: GPT‑5 (API models) and the o‑series
+# Reasoning-capable models (support reasoning tokens / reasoning.effort).
 REASONING_MODELS: Set[str] = {
-    "gpt-5", "gpt-5-mini", "gpt-5-nano",
-    "o4-mini",
-    "o3", "o3-mini", "o3-pro",
+    # GPT-5.2 family
+    "gpt-5.2", "gpt-5.2-chat-latest", "gpt-5.2-pro", "gpt-5.2-codex",
+    # GPT-5.1 family
+    "gpt-5.1", "gpt-5.1-chat-latest",
+    # GPT-5 family
+    "gpt-5", "gpt-5-chat-latest", "gpt-5-pro", "gpt-5-mini", "gpt-5-nano",
+    # Codex models
+    "gpt-5.1-codex-max", "gpt-5.1-codex", "gpt-5-codex", "gpt-5.1-codex-mini", "codex-mini-latest",
+    # O-series models
     "o1", "o1-mini", "o1-pro",
+    "o3", "o3-mini", "o3-pro",
+    "o4-mini",
+    # Deep research variants
+    "o3-deep-research", "o4-mini-deep-research",
 }
 
-# Reasoning effort levels accepted today (GPT‑5 adds 'minimal')
-VALID_EFFORT: Set[str] = {"minimal", "low", "medium", "high"}
+# Reasoning effort levels accepted by the API today (model support varies).
+VALID_EFFORT: Set[str] = {"none", "minimal", "low", "medium", "high", "xhigh"}
+
 
 # ---------------------------------------------------------------------------
 # Wrapper
@@ -188,22 +332,23 @@ class OpenAIWrapper:
             )
 
         # ----------------- reasoning-effort validation -------------
-        if model_name in REASONING_MODELS:
-            if reasoning_effort is None:
-                raise ValueError(
-                    f"Model '{model_name}' requires a reasoning_effort "
-                    f"argument: one of {', '.join(sorted(VALID_EFFORT))}."
-                )
-            if reasoning_effort not in VALID_EFFORT:
-                raise ValueError(
-                    f"reasoning_effort must be one of "
-                    f"{', '.join(sorted(VALID_EFFORT))}."
-                )
-        else:
-            if reasoning_effort is not None:
-                raise ValueError(
-                    f"Model '{model_name}' does NOT support reasoning_effort."
-                )
+        # Commented out to let OpenAI API handle reasoning_effort validation
+        # if model_name in REASONING_MODELS:
+        #     if reasoning_effort is None:
+        #         raise ValueError(
+        #             f"Model '{model_name}' requires a reasoning_effort "
+        #             f"argument: one of {', '.join(sorted(VALID_EFFORT))}."
+        #         )
+        #     if reasoning_effort not in VALID_EFFORT:
+        #         raise ValueError(
+        #             f"reasoning_effort must be one of "
+        #             f"{', '.join(sorted(VALID_EFFORT))}."
+        #         )
+        # else:
+        #     if reasoning_effort is not None:
+        #         raise ValueError(
+        #             f"Model '{model_name}' does NOT support reasoning_effort."
+        #         )
 
         # ----------------- temperature validation -------------
         if model_name in REASONING_MODELS and temperature is not None:
