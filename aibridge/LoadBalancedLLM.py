@@ -91,12 +91,19 @@ class LoadBalancedLLM(LLM):
             if self._child_has_cost:
                 usage_after = self.llm.get_token_counter()
 
-                # Determine how many tokens were used for this request
                 used_input = usage_after["input"] - usage_before["input"]
-                used_output = usage_after["output"] - usage_before["output"]
+                used_output = (usage_after.get("output_total", usage_after.get("output", 0))
+                               - usage_before.get("output_total", usage_before.get("output", 0)))
+                used_thinking = (usage_after.get("output_thinking", 0)
+                                 - usage_before.get("output_thinking", 0))
+                used_cached = (usage_after.get("input_cached", 0)
+                               - usage_before.get("input_cached", 0))
 
-                # Update this wrapper's counters
-                self.update_token_counters(used_input, used_output)
+                self.update_token_counters(
+                    used_input, used_output,
+                    thinking_tokens=used_thinking,
+                    cached_input_tokens=used_cached,
+                )
 
             # Store the result
             result_holder["completion"] = completion

@@ -19,6 +19,13 @@ class LLM(ABC):
         # Initialize token counters
         self.token_counter_input = 0
         self.token_counter_output = 0
+        self.token_counter_thinking = 0
+        self.token_counter_input_cached = 0
+
+        # Subclasses can override to apply a discount for cached input tokens.
+        # OpenAI uses 0.5 (50% discount). Anthropic overrides get_cost() directly
+        # because it has two cache tiers (creation at 1.25x, read at 0.1x).
+        self._cached_input_cost_multiplier = 1.0
 
     @abstractmethod
     def get_completion(self, prompt):
@@ -33,31 +40,37 @@ class LLM(ABC):
         """
         raise NotImplementedError("Subclasses must implement this method.")
 
-
-    def update_token_counters(self, input_tokens: int, output_tokens: int):
-        # Update internal token counters
+    def update_token_counters(self, input_tokens: int, output_tokens: int,
+                              thinking_tokens: int = 0, cached_input_tokens: int = 0):
         self.token_counter_input += input_tokens
         self.token_counter_output += output_tokens
+        self.token_counter_thinking += thinking_tokens
+        self.token_counter_input_cached += cached_input_tokens
 
     def get_token_counter(self):
-        # Generate dictionary with token counts
-        return {
-            "input": self.token_counter_input,
-            "output": self.token_counter_output,
-            "total": self.token_counter_input + self.token_counter_output
-        }
+        result = {"input": self.token_counter_input}
+        if self.token_counter_input_cached > 0:
+            result["input_cached"] = self.token_counter_input_cached
+        if self.token_counter_thinking > 0:
+            result["output_thinking"] = self.token_counter_thinking
+            result["output_response"] = self.token_counter_output - self.token_counter_thinking
+            result["output_total"] = self.token_counter_output
+        else:
+            result["output"] = self.token_counter_output
+        result["total"] = self.token_counter_input + self.token_counter_output
+        return result
 
     def get_cost(self):
-        # Calculate cost in dollars
-        if self.cost_per_1M_tokens_input is not None and self.cost_per_1M_tokens_output is not None:
-            cost = (self.token_counter_input * self.cost_per_1M_tokens_input / 1000000) + \
-                   (self.token_counter_output * self.cost_per_1M_tokens_output / 1000000)
-            return cost
-        else:
+        if self.cost_per_1M_tokens_input is None or self.cost_per_1M_tokens_output is None:
             return 0.0
+        non_cached = self.token_counter_input - self.token_counter_input_cached
+        input_cost = (non_cached * self.cost_per_1M_tokens_input / 1_000_000) + \
+                     (self.token_counter_input_cached * self.cost_per_1M_tokens_input
+                      * self._cached_input_cost_multiplier / 1_000_000)
+        output_cost = self.token_counter_output * self.cost_per_1M_tokens_output / 1_000_000
+        return input_cost + output_cost
 
     def get_cost_str(self):
-        # Return formatted cost string
         cost = self.get_cost()
         return "${:,.5f}".format(cost)
 
@@ -65,8 +78,19 @@ class LLM(ABC):
         """
         Print token counter and cost, formatted.
         """
-        print("Tokens: {}".format(self.get_token_counter()))
-        print("Cost: {}".format(self.get_cost_str()))
+        counters = self.get_token_counter()
+        parts = [f"input={counters['input']}"]
+        if "input_cached" in counters:
+            parts.append(f"input_cached={counters['input_cached']}")
+        if "output_thinking" in counters:
+            parts.append(f"output_thinking={counters['output_thinking']}")
+            parts.append(f"output_response={counters['output_response']}")
+            parts.append(f"output_total={counters['output_total']}")
+        else:
+            parts.append(f"output={counters['output']}")
+        parts.append(f"total={counters['total']}")
+        print(f"Tokens: {', '.join(parts)}")
+        print(f"Cost: {self.get_cost_str()}")
 
     def identify(self):
         """
