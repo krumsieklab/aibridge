@@ -6,6 +6,20 @@ from aibridge.llm import LLM
 # Dictionary of models with model name as key and cost structure as value (per million tokens)
 anthropic_models = {
     # ── Latest generation ──────────────────────────────────────────────
+    "claude-opus-4-8": {
+        "model_name": "claude-opus-4-8",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 5.0,
+            "cost_per_1M_tokens_output": 25.0
+        }
+    },
+    "claude-opus-4-7": {
+        "model_name": "claude-opus-4-7",
+        "cost_structure": {
+            "cost_per_1M_tokens_input": 5.0,
+            "cost_per_1M_tokens_output": 25.0
+        }
+    },
     "claude-opus-4-6": {
         "model_name": "claude-opus-4-6",
         "cost_structure": {
@@ -73,8 +87,8 @@ anthropic_models = {
     }
 }
 
-_ADAPTIVE_THINKING_MODELS = {"claude-opus-4-6", "claude-sonnet-4-6"}
-_EFFORT_MODELS = {"claude-opus-4-6", "claude-sonnet-4-6", "claude-opus-4-5"}
+_ADAPTIVE_THINKING_MODELS = {"claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-sonnet-4-6"}
+_EFFORT_MODELS = {"claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-sonnet-4-6", "claude-opus-4-5"}
 
 
 class AnthropicClient(LLM):

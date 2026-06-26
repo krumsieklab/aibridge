@@ -4,6 +4,16 @@ from openai import OpenAI
 
 from aibridge.llm import LLM
 openai_models = {
+    # --- GPT-5.5 family ---
+    "gpt-5.5": {
+        "model_name": "gpt-5.5",
+        "cost_structure": {"cost_per_1M_tokens_input": 2.50, "cost_per_1M_tokens_output": 15.00},
+    },
+    "gpt-5.5-pro": {
+        "model_name": "gpt-5.5-pro",
+        "cost_structure": {"cost_per_1M_tokens_input": 30.00, "cost_per_1M_tokens_output": 180.00},
+    },
+
     # --- GPT-5.4 family (Standard tier, March 2026) ---
     "gpt-5.4": {
         "model_name": "gpt-5.4",
@@ -12,6 +22,14 @@ openai_models = {
     "gpt-5.4-pro": {
         "model_name": "gpt-5.4-pro",
         "cost_structure": {"cost_per_1M_tokens_input": 30.00, "cost_per_1M_tokens_output": 180.00},
+    },
+    "gpt-5.4-mini": {
+        "model_name": "gpt-5.4-mini",
+        "cost_structure": {"cost_per_1M_tokens_input": 0.25, "cost_per_1M_tokens_output": 2.00},
+    },
+    "gpt-5.4-nano": {
+        "model_name": "gpt-5.4-nano",
+        "cost_structure": {"cost_per_1M_tokens_input": 0.05, "cost_per_1M_tokens_output": 0.40},
     },
 
     # --- GPT-5.3 family (Standard tier, Feb-Mar 2026) ---
